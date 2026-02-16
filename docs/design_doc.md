@@ -349,4 +349,4 @@ WHERE contract_id = ?
 - DB：4 テーブル
 - 制約：2 つ（active 一件 / 1 日 1 違反）
 - 決済：モック
-- Summary は Dashboard に統合 s
+- Summary は Dashboard に統合

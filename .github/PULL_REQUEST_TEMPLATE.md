@@ -4,8 +4,8 @@
 
 ## Check Lists
 
-[ ] Worked well on local environment
-[ ] Tests passed
+- [ ] Worked well on local environment
+- [ ] Tests passed
 
 ## ScreenShot (if you need)
 

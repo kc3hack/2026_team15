@@ -137,4 +137,4 @@ Screen Time capability の設定チェックは `docs/ios-capabilities.md` を�
 ## 7. CI / CD
 
 - **CI** (`.github/workflows/ci.yml`): `main` / `develop` への push/PR 時に lint, typecheck, test, format check を実行
-- **CD** (`.github/workflows/cd.yml`): `main` の `supabase/*` 変更時に Supabase へデプロイ（Secrets 設定が必要）
+- **CD**: 今後実装予定（`main` の `supabase/*` 変更時に Supabase へデプロイ）
