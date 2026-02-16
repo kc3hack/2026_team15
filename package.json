@@ -1,0 +1,17 @@
+{
+  "name": "2026_team15",
+  "private": true,
+  "scripts": {
+    "mobile:install": "npm install --prefix mobile --cache /tmp/npm-cache-2026-team15",
+    "mobile:start": "npm --prefix mobile run start",
+    "mobile:ios": "npm --prefix mobile run ios",
+    "mobile:typecheck": "npm --prefix mobile run typecheck",
+    "mobile:test": "npm --prefix mobile run test",
+    "mobile:lint": "npm --prefix mobile run lint",
+    "supabase:start": "npx supabase@latest start",
+    "supabase:stop": "npx supabase@latest stop",
+    "supabase:status": "npx supabase@latest status",
+    "supabase:db:reset": "npx supabase@latest db reset",
+    "supabase:functions:serve": "npx supabase@latest functions serve --env-file supabase/.env.local"
+  }
+}
