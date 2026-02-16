@@ -1,4 +1,4 @@
-import {SUPABASE_ANON_KEY, SUPABASE_URL} from '@env';
+import { SUPABASE_ANON_KEY, SUPABASE_URL } from '@env';
 
 function assertEnv(name: string, value?: string): string {
   if (!value) {

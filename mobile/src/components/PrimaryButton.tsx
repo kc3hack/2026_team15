@@ -1,5 +1,5 @@
 import React from 'react';
-import {Pressable, StyleSheet, Text} from 'react-native';
+import { Pressable, StyleSheet, Text } from 'react-native';
 
 type Props = {
   title: string;
@@ -17,11 +17,12 @@ export function PrimaryButton({
       accessibilityRole="button"
       disabled={disabled}
       onPress={onPress}
-      style={({pressed}) => [
+      style={({ pressed }) => [
         styles.button,
         disabled ? styles.disabled : null,
         pressed && !disabled ? styles.pressed : null,
-      ]}>
+      ]}
+    >
       <Text style={styles.label}>{title}</Text>
     </Pressable>
   );

@@ -4,7 +4,7 @@
 
 ## 技術スタック（MVP）
 
-- モバイル: React Native 0.82 + TypeScript（iOS優先）
+- モバイル: React Native 0.82 + TypeScript
 - ネイティブ: Swift（Screen Time API 連携予定）
 - BaaS: Supabase（Auth / Postgres / Edge Functions）
 - 決済: モック（`ledger_entries` 台帳）
@@ -34,7 +34,7 @@
 
 - Node.js `22.14.0`（`.nvmrc`）
 - npm `10+`
-- Xcode（iOS実機/シミュレータ実行時）
+- Xcode（iOS 実機/シミュレータ実行時）
 - CocoaPods
 - Supabase CLI（本リポジトリでは `npx supabase@latest ...` で実行）
 
@@ -105,14 +105,14 @@ iOS:
 npm run mobile:ios
 ```
 
-## 4. DB設計の実装内容（MVP）
+## 4. DB 設計の実装内容（MVP）
 
 `supabase/migrations/20260216121000_init_mvp.sql` に以下を実装済みです。
 
 - `profiles` / `contracts` / `violations` / `ledger_entries`
 - 制約:
-  - 1ユーザー1 active 契約（partial unique index）
-  - 1日1違反（`unique(contract_id, date)`）
+  - 1 ユーザー 1 active 契約（partial unique index）
+  - 1 日 1 違反（`unique(contract_id, date)`）
 - RLS（自分の行のみアクセス）
 - `record_violation` 関数（冪等: 新規違反時のみ penalty 台帳を追加）
 - `auth.users` 作成時の `profiles` 自動作成トリガ
@@ -123,7 +123,7 @@ npm run mobile:ios
 
 - Bearer token を検証してユーザー特定
 - RPC `public.record_violation(...)` を呼び出し
-- 多重発火時でも DB 側制約で1日1回のみ減算
+- 多重発火時でも DB 側制約で 1 日 1 回のみ減算
 
 ## 6. 次に実装する項目（推奨順）
 
@@ -133,3 +133,8 @@ npm run mobile:ios
 4. `record-violation` 呼び出しと Dashboard 再取得ロジック
 
 Screen Time capability の設定チェックは `docs/ios-capabilities.md` を参照してください。
+
+## 7. CI / CD
+
+- **CI** (`.github/workflows/ci.yml`): `main` / `develop` への push/PR 時に lint, typecheck, test, format check を実行
+- **CD** (`.github/workflows/cd.yml`): `main` の `supabase/*` 変更時に Supabase へデプロイ（Secrets 設定が必要）

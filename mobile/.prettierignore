@@ -1,0 +1,6 @@
+node_modules/
+ios/
+android/
+vendor/
+*.lock
+package-lock.json

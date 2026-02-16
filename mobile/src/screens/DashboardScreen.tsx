@@ -1,15 +1,15 @@
-import React, {useMemo, useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {PrimaryButton} from '../components/PrimaryButton';
-import {ScreenContainer} from '../components/ScreenContainer';
-import {RootStackParamList} from '../navigation/types';
+import React, { useMemo, useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { ScreenContainer } from '../components/ScreenContainer';
+import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Dashboard'>;
 
 type ContractStatus = 'active' | 'completed';
 
-export function DashboardScreen({navigation}: Props): React.JSX.Element {
+export function DashboardScreen({ navigation }: Props): React.JSX.Element {
   const [status, setStatus] = useState<ContractStatus>('active');
   const display = useMemo(
     () =>
@@ -32,7 +32,8 @@ export function DashboardScreen({navigation}: Props): React.JSX.Element {
   return (
     <ScreenContainer
       title="Dashboard"
-      description="契約状態（active/completed）に応じて表示を切り替えます。">
+      description="契約状態（active/completed）に応じて表示を切り替えます。"
+    >
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>契約情報</Text>
         <Text style={styles.text}>{display.title}</Text>
@@ -56,7 +57,9 @@ export function DashboardScreen({navigation}: Props): React.JSX.Element {
       {status === 'completed' ? (
         <PrimaryButton
           title="新しい契約を開始"
-          onPress={() => navigation.reset({index: 0, routes: [{name: 'Login'}]})}
+          onPress={() =>
+            navigation.reset({ index: 0, routes: [{ name: 'Login' }] })
+          }
         />
       ) : (
         <PrimaryButton

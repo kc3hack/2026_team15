@@ -1,20 +1,21 @@
-import React, {useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {PrimaryButton} from '../components/PrimaryButton';
-import {ScreenContainer} from '../components/ScreenContainer';
-import {ScreenTime} from '../native/screenTime';
-import {RootStackParamList} from '../navigation/types';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { ScreenContainer } from '../components/ScreenContainer';
+import { ScreenTime } from '../native/screenTime';
+import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Permission'>;
 
-export function PermissionScreen({navigation}: Props): React.JSX.Element {
+export function PermissionScreen({ navigation }: Props): React.JSX.Element {
   const [authorized, setAuthorized] = useState(false);
 
   return (
     <ScreenContainer
       title="権限設定"
-      description="Screen Time API の使用許可を取得します。">
+      description="Screen Time API の使用許可を取得します。"
+    >
       <View style={styles.card}>
         <Text style={styles.statusLabel}>現在の状態</Text>
         <Text style={styles.statusValue}>

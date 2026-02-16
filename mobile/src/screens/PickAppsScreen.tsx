@@ -1,20 +1,21 @@
-import React, {useState} from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {PrimaryButton} from '../components/PrimaryButton';
-import {ScreenContainer} from '../components/ScreenContainer';
-import {ScreenTime} from '../native/screenTime';
-import {RootStackParamList} from '../navigation/types';
+import React, { useState } from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { ScreenContainer } from '../components/ScreenContainer';
+import { ScreenTime } from '../native/screenTime';
+import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'PickApps'>;
 
-export function PickAppsScreen({navigation}: Props): React.JSX.Element {
+export function PickAppsScreen({ navigation }: Props): React.JSX.Element {
   const [selectedApps, setSelectedApps] = useState<string[]>([]);
 
   return (
     <ScreenContainer
       title="制限アプリ選択"
-      description="iOS App Picker で対象アプリを選択します。">
+      description="iOS App Picker で対象アプリを選択します。"
+    >
       <View style={styles.card}>
         <Text style={styles.cardTitle}>選択中アプリ</Text>
         <Text style={styles.cardBody}>

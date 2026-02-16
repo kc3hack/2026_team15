@@ -1,9 +1,7 @@
 ---
-
 # 🟦 ヨハク（YOHAKU）
 
 # 最終 基本設計書（MVP）
-
 ---
 
 ## 1. 概要
@@ -15,20 +13,19 @@
 ### 1.2 目的
 
 ユーザーが本当に欲しい「時間と心の余白」を得るために、
-s
 スマホ利用を**契約構造と金銭的コミットメント（モック）**で制御する。
 
-### 1.3 MVPスコープ
+### 1.3 MVP スコープ
 
-- 対象OS：**iOSのみ**
+- 対象 OS：**iOS のみ**
 - フロント：React Native + TypeScript
 - ネイティブ機能：Swift（Screen Time API）
 - Backend：Supabase
-- 決済：**モック（ledger台帳）**
+- 決済：**モック（ledger 台帳）**
 - 制限単位：**アプリ単位**
-- 契約：**1週間固定**
-- 同時契約：**1ユーザー1件のみ（DB制約）**
-- 判定：**1日1違反のみ記録**
+- 契約：**1 週間固定**
+- 同時契約：**1 ユーザー 1 件のみ（DB 制約）**
+- 判定：**1 日 1 違反のみ記録**
 
 ---
 
@@ -38,18 +35,18 @@ s
 
 ### モバイル（RN + TS）
 
-- 画面UI
-- Supabase通信
-- Swiftブリッジ呼び出し
+- 画面 UI
+- Supabase 通信
+- Swift ブリッジ呼び出し
 - 超過イベント受信
 - 状態管理
 
-### iOSネイティブ（Swift）
+### iOS ネイティブ（Swift）
 
-- Screen Time許可
+- Screen Time 許可
 - アプリ選択
 - 使用時間監視
-- Shield適用
+- Shield 適用
 - 超過イベント通知
 
 ### Supabase
@@ -62,14 +59,14 @@ s
 
 ## 3. 機能一覧（MVP）
 
-1. Appleログイン
-2. Screen Time許可
+1. Apple ログイン
+2. Screen Time 許可
 3. 制限対象アプリ選択
-4. 契約作成（1週間）
+4. 契約作成（1 週間）
 5. デポジット（モック）生成
 6. 使用時間監視
 7. 超過時ロック
-8. 違反記録（1日1回）
+8. 違反記録（1 日 1 回）
 9. 翌日リセット
 10. ダッシュボード表示（契約中／終了状態切替）
 
@@ -81,9 +78,9 @@ s
 2. Permission
 3. Pick Apps
 4. Create Contract
-5. **Dashboard（Home + Summary統合）**
+5. **Dashboard（Home + Summary 統合）**
 
-※ WeeklySummaryは独立画面にしない
+※ WeeklySummary は独立画面にしない
 
 ---
 
@@ -98,13 +95,13 @@ s
 ## 1.1 Login
 
 - Sign in with Apple
-- 成功後 → profiles作成（存在しなければ）
+- 成功後 → profiles 作成（存在しなければ）
 
 ---
 
 ## 1.2 Permission
 
-- Screen Time許可ボタン
+- Screen Time 許可ボタン
 - `requestAuthorization()` 呼び出し
 
 ---
@@ -112,7 +109,7 @@ s
 ## 1.3 Pick Apps
 
 - `presentAppPicker()`
-- bundle IDs取得
+- bundle IDs 取得
 - ローカル保持
 
 ---
@@ -122,7 +119,7 @@ s
 ### 入力
 
 - 日次上限時間（秒）
-- 固定ペナルティ 500円/日
+- 固定ペナルティ 500 円/日
 
 ### 表示
 
@@ -133,13 +130,13 @@ s
 1. contracts insert
 2. ledger_entries に deposit +3500
 3. `startMonitoring()` 呼び出し
-4. Dashboardへ遷移
+4. Dashboard へ遷移
 
 ---
 
 # 2. Dashboard（統合設計）
 
-Dashboardは状態によってUIを切替。
+Dashboard は状態によって UI を切替。
 
 ---
 
@@ -162,7 +159,7 @@ Dashboardは状態によってUIを切替。
 ### セクション：今週
 
 - 失敗日数
-- 残高（ledger合計）
+- 残高（ledger 合計）
 
 ---
 
@@ -184,48 +181,48 @@ Dashboardは状態によってUIを切替。
 
 ## 3.1 profiles
 
-| カラム | 型 | 備考 |
-| --- | --- | --- |
-| id | uuid | auth.users.id |
-| apple_user_id | text | 任意 |
-| stripe_customer_id | text | 将来用 |
-| created_at | timestamptz |  |
-| updated_at | timestamptz |  |
+| カラム             | 型          | 備考          |
+| ------------------ | ----------- | ------------- |
+| id                 | uuid        | auth.users.id |
+| apple_user_id      | text        | 任意          |
+| stripe_customer_id | text        | 将来用        |
+| created_at         | timestamptz |               |
+| updated_at         | timestamptz |               |
 
 ---
 
 ## 3.2 contracts
 
-| カラム | 型 | 備考 |
-| --- | --- | --- |
-| id | uuid | PK |
-| user_id | uuid | FK |
-| start_at | timestamptz |  |
-| end_at | timestamptz |  |
-| daily_limit_seconds | int |  |
-| penalty_per_day | int | 500 |
-| deposit_total | int | 3500 |
-| status | text | active/completed/canceled |
-| selected_apps | jsonb | bundle ids |
-| selected_categories | jsonb | nullable |
+| カラム              | 型          | 備考                      |
+| ------------------- | ----------- | ------------------------- |
+| id                  | uuid        | PK                        |
+| user_id             | uuid        | FK                        |
+| start_at            | timestamptz |                           |
+| end_at              | timestamptz |                           |
+| daily_limit_seconds | int         |                           |
+| penalty_per_day     | int         | 500                       |
+| deposit_total       | int         | 3500                      |
+| status              | text        | active/completed/canceled |
+| selected_apps       | jsonb       | bundle ids                |
+| selected_categories | jsonb       | nullable                  |
 
 ### 制約
 
-- `status='active'` は user_id につき1件
+- `status='active'` は user_id につき 1 件
 - `end_at > start_at`
 
 ---
 
 ## 3.3 violations
 
-| カラム | 型 |
-| --- | --- |
-| id | uuid |
-| contract_id | uuid |
-| user_id | uuid |
-| date | date |
-| exceeded_at | timestamptz |
-| penalty_amount | int |
+| カラム         | 型          |
+| -------------- | ----------- |
+| id             | uuid        |
+| contract_id    | uuid        |
+| user_id        | uuid        |
+| date           | date        |
+| exceeded_at    | timestamptz |
+| penalty_amount | int         |
 
 ### 制約
 
@@ -235,16 +232,16 @@ Dashboardは状態によってUIを切替。
 
 ## 3.4 ledger_entries
 
-| カラム | 型 |
-| --- | --- |
-| id | uuid |
-| user_id | uuid |
-| contract_id | uuid |
-| type | text |
-| amount | int |
-| local_date | date |
-| note | text |
-| created_at | timestamptz |
+| カラム      | 型          |
+| ----------- | ----------- |
+| id          | uuid        |
+| user_id     | uuid        |
+| contract_id | uuid        |
+| type        | text        |
+| amount      | int         |
+| local_date  | date        |
+| note        | text        |
+| created_at  | timestamptz |
 
 ### type
 
@@ -260,9 +257,9 @@ Dashboardは状態によってUIを切替。
 
 ## 4.1 契約作成フロー
 
-1. active契約存在チェック（DB制約あり）
+1. active 契約存在チェック（DB 制約あり）
 2. contracts insert
-3. ledger deposit追加
+3. ledger deposit 追加
 4. 監視開始
 
 ---
@@ -271,22 +268,22 @@ Dashboardは状態によってUIを切替。
 
 Swift：
 
-- Shield適用
+- Shield 適用
 - `onLimitExceeded`送信
 
 RN：
 
-1. `record-violation` Edge Function呼び出し
+1. `record-violation` Edge Function 呼び出し
 2. violations upsert
 3. ledger -500
-4. Dashboard再取得
+4. Dashboard 再取得
 
 ---
 
 ## 4.3 冪等性保証
 
-- violationsに `unique(contract_id, date)`
-- Edge Functionで新規作成時のみledger減算
+- violations に `unique(contract_id, date)`
+- Edge Function で新規作成時のみ ledger 減算
 
 ---
 
@@ -302,8 +299,8 @@ WHERE contract_id = ?
 
 ## 4.5 日次リセット
 
-- localDate基準
-- 日付変更でShield解除
+- localDate 基準
+- 日付変更で Shield 解除
 - 監視再設定
 
 ---
@@ -314,42 +311,42 @@ WHERE contract_id = ?
 
 ## 5.1 整合性
 
-- 同時active契約1件
-- 1日1違反保証
+- 同時 active 契約 1 件
+- 1 日 1 違反保証
 
 ---
 
 ## 5.2 信頼性
 
-- 超過多重発火でも1回のみ減算
+- 超過多重発火でも 1 回のみ減算
 - ネット復帰時再同期
 
 ---
 
 ## 5.3 セキュリティ
 
-- RLSで自分の行のみアクセス
+- RLS で自分の行のみアクセス
 - 決済情報は扱わない（モック）
 
 ---
 
 # 6. Definition of Done
 
-- Appleログイン成功
-- Screen Time許可取得
+- Apple ログイン成功
+- Screen Time 許可取得
 - 制限対象アプリ選択可能
 - 契約作成成功
-- 超過でShield適用
-- 1日1回のみ減算
+- 超過で Shield 適用
+- 1 日 1 回のみ減算
 - 残高表示が正確
-- 契約終了状態をDashboardで表示
+- 契約終了状態を Dashboard で表示
 
 ---
 
 # 最終構成まとめ
 
-- 画面：5画面
-- DB：4テーブル
-- 制約：2つ（active一件 / 1日1違反）
+- 画面：5 画面
+- DB：4 テーブル
+- 制約：2 つ（active 一件 / 1 日 1 違反）
 - 決済：モック
-- SummaryはDashboardに統合s
+- Summary は Dashboard に統合 s

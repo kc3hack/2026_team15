@@ -8,6 +8,8 @@
     "mobile:typecheck": "npm --prefix mobile run typecheck",
     "mobile:test": "npm --prefix mobile run test",
     "mobile:lint": "npm --prefix mobile run lint",
+    "mobile:format": "npm --prefix mobile run format",
+    "mobile:format:check": "npm --prefix mobile run format:check",
     "supabase:start": "npx supabase@latest start",
     "supabase:stop": "npx supabase@latest stop",
     "supabase:status": "npx supabase@latest status",
