@@ -1,5 +1,5 @@
 import React from 'react';
-import {SafeAreaView, ScrollView, StyleSheet, Text, View} from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 type Props = {
   title: string;
@@ -16,7 +16,8 @@ export function ScreenContainer({
     <SafeAreaView style={styles.safeArea}>
       <ScrollView
         contentInsetAdjustmentBehavior="automatic"
-        contentContainerStyle={styles.content}>
+        contentContainerStyle={styles.content}
+      >
         <Text style={styles.title}>{title}</Text>
         <Text style={styles.description}>{description}</Text>
         <View style={styles.body}>{children}</View>

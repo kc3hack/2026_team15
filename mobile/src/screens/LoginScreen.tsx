@@ -1,17 +1,18 @@
 import React from 'react';
-import {StyleSheet, Text, View} from 'react-native';
-import {NativeStackScreenProps} from '@react-navigation/native-stack';
-import {PrimaryButton} from '../components/PrimaryButton';
-import {ScreenContainer} from '../components/ScreenContainer';
-import {RootStackParamList} from '../navigation/types';
+import { StyleSheet, Text, View } from 'react-native';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { PrimaryButton } from '../components/PrimaryButton';
+import { ScreenContainer } from '../components/ScreenContainer';
+import { RootStackParamList } from '../navigation/types';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 
-export function LoginScreen({navigation}: Props): React.JSX.Element {
+export function LoginScreen({ navigation }: Props): React.JSX.Element {
   return (
     <ScreenContainer
       title="YOHAKU"
-      description="Sign in with Apple 後に、プロフィール作成と初期設定へ進みます。">
+      description="Sign in with Apple 後に、プロフィール作成と初期設定へ進みます。"
+    >
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Apple ログイン</Text>
         <Text style={styles.cardBody}>
