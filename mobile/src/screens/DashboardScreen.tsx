@@ -31,22 +31,21 @@ function InfoCell({
           styles.infoValue,
           danger && styles.infoValueDanger,
           highlight && styles.infoValueHighlight,
-        ]}>
+        ]}
+      >
         {value}
       </Text>
     </View>
   );
 }
 
-function SimButton({
-  label,
-  onPress,
-}: {
-  label: string;
-  onPress: () => void;
-}) {
+function SimButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <TouchableOpacity style={styles.simButton} onPress={onPress} activeOpacity={0.7}>
+    <TouchableOpacity
+      style={styles.simButton}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <Text style={styles.simButtonText}>{label}</Text>
     </TouchableOpacity>
   );
@@ -81,7 +80,10 @@ function ActiveDashboard({
   const violationDays = mockStore.getViolationDaysCount(contract.id);
   const balance = mockStore.getContractBalance(contract.id);
   const isShielded = mockStore.isShieldActive();
-  const usagePercent = Math.min(100, (todayUsage / contract.dailyLimitSeconds) * 100);
+  const usagePercent = Math.min(
+    100,
+    (todayUsage / contract.dailyLimitSeconds) * 100,
+  );
   const remainingSeconds = Math.max(0, contract.dailyLimitSeconds - todayUsage);
 
   const handleSimulateUsage = useCallback(
@@ -106,7 +108,8 @@ function ActiveDashboard({
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header */}
         <View style={styles.header}>
           <View>
@@ -224,9 +227,12 @@ function ActiveDashboard({
         <View style={styles.simulatorSection}>
           <TouchableOpacity
             style={styles.simulatorToggle}
-            onPress={() => setShowSimulator(v => !v)}>
+            onPress={() => setShowSimulator(v => !v)}
+          >
             <Text style={styles.simulatorToggleText}>
-              {showSimulator ? 'シミュレーターを閉じる' : 'シミュレーターを開く'}
+              {showSimulator
+                ? 'シミュレーターを閉じる'
+                : 'シミュレーターを開く'}
             </Text>
           </TouchableOpacity>
 
@@ -252,7 +258,8 @@ function ActiveDashboard({
               {isShielded && (
                 <TouchableOpacity
                   style={styles.resetButton}
-                  onPress={resetDailyShield}>
+                  onPress={resetDailyShield}
+                >
                   <Text style={styles.resetText}>日次リセット</Text>
                 </TouchableOpacity>
               )}
@@ -311,10 +318,7 @@ function CompletedDashboard({
               value={`${violationDays}日 / 7日`}
               danger={violationDays > 0}
             />
-            <InfoCell
-              label="成功日数"
-              value={`${7 - violationDays}日 / 7日`}
-            />
+            <InfoCell label="成功日数" value={`${7 - violationDays}日 / 7日`} />
           </View>
           <View style={styles.divider} />
           <View style={styles.infoGrid}>
@@ -338,7 +342,8 @@ function CompletedDashboard({
         <TouchableOpacity
           style={styles.button}
           onPress={onNewContract}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+        >
           <Text style={styles.buttonText}>新しい契約を開始する</Text>
         </TouchableOpacity>
       </View>
@@ -377,7 +382,8 @@ export function DashboardScreen(): React.JSX.Element {
           <Text style={styles.emptyText}>契約が見つかりません</Text>
           <TouchableOpacity
             style={styles.button}
-            onPress={() => setStep('pick-apps')}>
+            onPress={() => setStep('pick-apps')}
+          >
             <Text style={styles.buttonText}>新しい契約を作成</Text>
           </TouchableOpacity>
         </View>

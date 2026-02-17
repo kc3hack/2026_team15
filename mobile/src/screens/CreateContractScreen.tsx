@@ -39,7 +39,9 @@ function SummaryRow({
   return (
     <View style={styles.summaryRow}>
       <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={[styles.summaryValue, highlight && styles.summaryValueHighlight]}>
+      <Text
+        style={[styles.summaryValue, highlight && styles.summaryValueHighlight]}
+      >
         {value}
       </Text>
     </View>
@@ -87,10 +89,7 @@ export function CreateContractScreen(): React.JSX.Element {
           </View>
 
           <View style={styles.summaryCard}>
-            <SummaryRow
-              label="日次上限"
-              value={formatSeconds(selectedLimit)}
-            />
+            <SummaryRow label="日次上限" value={formatSeconds(selectedLimit)} />
             <View style={styles.divider} />
             <SummaryRow
               label="ペナルティ"
@@ -111,7 +110,8 @@ export function CreateContractScreen(): React.JSX.Element {
               style={styles.button}
               onPress={handleCreateContract}
               disabled={isCreating}
-              activeOpacity={0.7}>
+              activeOpacity={0.7}
+            >
               {isCreating ? (
                 <View style={styles.loadingContainer}>
                   <ActivityIndicator size="small" color={colors.surface} />
@@ -124,7 +124,8 @@ export function CreateContractScreen(): React.JSX.Element {
             <TouchableOpacity
               style={styles.buttonGhost}
               onPress={() => setShowConfirm(false)}
-              disabled={isCreating}>
+              disabled={isCreating}
+            >
               <Text style={styles.buttonGhostText}>戻る</Text>
             </TouchableOpacity>
           </View>
@@ -137,7 +138,8 @@ export function CreateContractScreen(): React.JSX.Element {
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Back */}
         <TouchableOpacity style={styles.backButton} onPress={handleBack}>
           <Text style={styles.backButtonText}>← 戻る</Text>
@@ -167,7 +169,9 @@ export function CreateContractScreen(): React.JSX.Element {
         <View style={styles.limitSection}>
           <View style={styles.limitHeader}>
             <Text style={styles.sectionLabel}>1日あたりの使用上限</Text>
-            <Text style={styles.limitValue}>{formatSeconds(selectedLimit)}</Text>
+            <Text style={styles.limitValue}>
+              {formatSeconds(selectedLimit)}
+            </Text>
           </View>
           <View style={styles.limitOptions}>
             {LIMIT_OPTIONS.map(option => (
@@ -178,12 +182,15 @@ export function CreateContractScreen(): React.JSX.Element {
                   selectedLimit === option.value && styles.limitOptionSelected,
                 ]}
                 onPress={() => setSelectedLimit(option.value)}
-                activeOpacity={0.7}>
+                activeOpacity={0.7}
+              >
                 <Text
                   style={[
                     styles.limitOptionText,
-                    selectedLimit === option.value && styles.limitOptionTextSelected,
-                  ]}>
+                    selectedLimit === option.value &&
+                      styles.limitOptionTextSelected,
+                  ]}
+                >
                   {option.label}
                 </Text>
               </TouchableOpacity>
@@ -195,10 +202,7 @@ export function CreateContractScreen(): React.JSX.Element {
         <View style={styles.contractSummary}>
           <Text style={styles.sectionLabel}>契約内容</Text>
           <View style={styles.summaryCard}>
-            <SummaryRow
-              label="契約期間"
-              value={`${CONTRACT_DAYS}日間`}
-            />
+            <SummaryRow label="契約期間" value={`${CONTRACT_DAYS}日間`} />
             <View style={styles.divider} />
             <SummaryRow
               label="超過ペナルティ"
@@ -222,7 +226,8 @@ export function CreateContractScreen(): React.JSX.Element {
         <TouchableOpacity
           style={styles.button}
           onPress={handleProceedToConfirm}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+        >
           <Text style={styles.buttonText}>
             {paymentCompleted ? '契約内容を確認する' : '支払い方法を入力する'}
           </Text>

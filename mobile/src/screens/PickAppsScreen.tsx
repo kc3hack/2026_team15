@@ -43,7 +43,8 @@ export function PickAppsScreen(): React.JSX.Element {
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>制限するアプリを選択</Text>
@@ -69,20 +70,25 @@ export function PickAppsScreen(): React.JSX.Element {
                           isSelected && styles.appItemSelected,
                         ]}
                         onPress={() => toggleApp(app.bundleId)}
-                        activeOpacity={0.7}>
+                        activeOpacity={0.7}
+                      >
                         <View
                           style={[
                             styles.appIndicator,
                             isSelected && styles.appIndicatorSelected,
-                          ]}>
-                          {isSelected && <Text style={styles.checkmark}>✓</Text>}
+                          ]}
+                        >
+                          {isSelected && (
+                            <Text style={styles.checkmark}>✓</Text>
+                          )}
                         </View>
                         <View style={styles.appInfo}>
                           <Text
                             style={[
                               styles.appName,
                               isSelected && styles.appNameSelected,
-                            ]}>
+                            ]}
+                          >
                             {app.name}
                           </Text>
                         </View>
@@ -99,13 +105,11 @@ export function PickAppsScreen(): React.JSX.Element {
       {/* Confirm button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[
-            styles.button,
-            selected.size === 0 && styles.buttonDisabled,
-          ]}
+          style={[styles.button, selected.size === 0 && styles.buttonDisabled]}
           onPress={handleConfirm}
           disabled={selected.size === 0}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+        >
           <Text style={styles.buttonText}>
             {selected.size > 0
               ? `${selected.size}個のアプリを選択`

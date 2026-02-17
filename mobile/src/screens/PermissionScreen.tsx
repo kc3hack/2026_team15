@@ -10,7 +10,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../lib/app-context';
 import { colors, spacing, borderRadius } from '../lib/theme';
 
-function PermissionItem({ label, description }: { label: string; description: string }) {
+function PermissionItem({
+  label,
+  description,
+}: {
+  label: string;
+  description: string;
+}) {
   return (
     <View style={styles.permissionItem}>
       <Text style={styles.permissionLabel}>{label}</Text>
@@ -78,7 +84,8 @@ export function PermissionScreen(): React.JSX.Element {
             ]}
             onPress={handleGrant}
             disabled={isGranting || granted}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+          >
             {isGranting ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.surface} />

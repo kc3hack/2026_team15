@@ -30,9 +30,7 @@ export function LoginScreen(): React.JSX.Element {
             <Text style={styles.logoText}>余</Text>
           </View>
           <Text style={styles.title}>ヨハク</Text>
-          <Text style={styles.subtitle}>
-            スマホから、余白を取り戻す
-          </Text>
+          <Text style={styles.subtitle}>スマホから、余白を取り戻す</Text>
         </View>
 
         {/* Message */}
@@ -49,7 +47,8 @@ export function LoginScreen(): React.JSX.Element {
             style={[styles.button, isLoading && styles.buttonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
-            activeOpacity={0.7}>
+            activeOpacity={0.7}
+          >
             {isLoading ? (
               <View style={styles.loadingContainer}>
                 <ActivityIndicator size="small" color={colors.surface} />
@@ -59,9 +58,7 @@ export function LoginScreen(): React.JSX.Element {
               <Text style={styles.buttonText}>Sign in with Apple</Text>
             )}
           </TouchableOpacity>
-          <Text style={styles.disclaimer}>
-            MVP: モックログインを使用
-          </Text>
+          <Text style={styles.disclaimer}>MVP: モックログインを使用</Text>
         </View>
       </View>
     </SafeAreaView>

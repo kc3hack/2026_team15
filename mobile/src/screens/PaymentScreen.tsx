@@ -119,12 +119,14 @@ export function PaymentScreen(): React.JSX.Element {
     <SafeAreaView style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}>
+        contentContainerStyle={styles.scrollContent}
+      >
         {/* Back button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={handleBack}
-          disabled={isProcessing}>
+          disabled={isProcessing}
+        >
           <Text style={styles.backButtonText}>← 戻る</Text>
         </TouchableOpacity>
 
@@ -142,9 +144,7 @@ export function PaymentScreen(): React.JSX.Element {
 
         {/* Mock notice */}
         <View style={styles.notice}>
-          <Text style={styles.noticeText}>
-            MVP: 実際の決済は行われません
-          </Text>
+          <Text style={styles.noticeText}>MVP: 実際の決済は行われません</Text>
         </View>
 
         {/* Payment form */}
@@ -172,10 +172,7 @@ export function PaymentScreen(): React.JSX.Element {
             <View style={[styles.inputGroup, { flex: 1 }]}>
               <Text style={styles.label}>有効期限</Text>
               <TextInput
-                style={[
-                  styles.input,
-                  errors.expiryDate && styles.inputError,
-                ]}
+                style={[styles.input, errors.expiryDate && styles.inputError]}
                 value={expiryDate}
                 onChangeText={handleExpiryChange}
                 placeholder="MM/YY"
@@ -200,9 +197,7 @@ export function PaymentScreen(): React.JSX.Element {
                 maxLength={4}
                 placeholderTextColor={colors.textLight}
               />
-              {errors.cvc && (
-                <Text style={styles.errorText}>{errors.cvc}</Text>
-              )}
+              {errors.cvc && <Text style={styles.errorText}>{errors.cvc}</Text>}
             </View>
           </View>
 
@@ -210,10 +205,7 @@ export function PaymentScreen(): React.JSX.Element {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>カード名義人</Text>
             <TextInput
-              style={[
-                styles.input,
-                errors.cardholderName && styles.inputError,
-              ]}
+              style={[styles.input, errors.cardholderName && styles.inputError]}
               value={cardholderName}
               onChangeText={text => {
                 setCardholderName(text);
@@ -239,7 +231,8 @@ export function PaymentScreen(): React.JSX.Element {
           style={[styles.button, isProcessing && styles.buttonDisabled]}
           onPress={handleSubmit}
           disabled={isProcessing}
-          activeOpacity={0.7}>
+          activeOpacity={0.7}
+        >
           {isProcessing ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="small" color={colors.surface} />

@@ -154,7 +154,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         simulateUsage,
         triggerViolation,
         resetDailyShield,
-      }}>
+      }}
+    >
       {children}
     </AppContext.Provider>
   );

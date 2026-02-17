@@ -58,7 +58,8 @@ export function AppNavigator(): React.JSX.Element {
         initialRouteName="Login"
         screenOptions={{
           headerShown: false,
-        }}>
+        }}
+      >
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Permission" component={PermissionScreen} />
         <Stack.Screen name="PickApps" component={PickAppsScreen} />
