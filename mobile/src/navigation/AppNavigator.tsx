@@ -29,24 +29,17 @@ function NavigationHandler() {
   const { step } = useApp();
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const initialStepRef = useRef<AppStep | null>(null);
+  const lastStepRef = useRef<AppStep | null>(null);
 
   useEffect(() => {
-    // 初回マウント時のstepを記録
-    if (initialStepRef.current === null) {
-      initialStepRef.current = step;
-      return;
-    }
-
-    // stepが変わった場合のみ遷移
-    if (step !== initialStepRef.current) {
-      initialStepRef.current = step;
-      const screenName = STEP_TO_SCREEN[step];
-      navigation.reset({
-        index: 0,
-        routes: [{ name: screenName }],
-      });
-    }
+    // 初回マウント時も含め、現在のstepに同期する
+    if (lastStepRef.current === step) return;
+    lastStepRef.current = step;
+    const screenName = STEP_TO_SCREEN[step];
+    navigation.reset({
+      index: 0,
+      routes: [{ name: screenName }],
+    });
   }, [step, navigation]);
 
   return null;
