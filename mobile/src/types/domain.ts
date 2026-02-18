@@ -1,7 +1,7 @@
 // Profile
 export type Profile = {
   id: string;
-  appleUserId: string;
+  appleUserId: string | null;
   stripeCustomerId: string | null;
   createdAt: string;
   updatedAt: string;
