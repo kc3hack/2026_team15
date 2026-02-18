@@ -141,6 +141,9 @@ export function PaymentScreen(): React.JSX.Element {
           <Text style={styles.noticeText}>
             テストモード: 実際の請求は行われません
           </Text>
+          <Text style={styles.noticeSubText}>
+            4242 4242 4242 4242 / 有効期限は任意 / CVCは任意
+          </Text>
         </View>
 
         {/* Payment form */}
@@ -262,6 +265,11 @@ const styles = StyleSheet.create({
   noticeText: {
     fontSize: 13,
     color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  noticeSubText: {
+    fontSize: 12,
+    color: colors.textMuted,
   },
   form: {
     gap: spacing.lg,
