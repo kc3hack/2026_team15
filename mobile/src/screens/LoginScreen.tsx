@@ -16,9 +16,13 @@ export function LoginScreen(): React.JSX.Element {
 
   const handleLogin = async () => {
     setIsLoading(true);
-    await new Promise<void>(resolve => setTimeout(resolve, 800));
-    login();
-    setIsLoading(false);
+    try {
+      await login();
+    } catch (error) {
+      console.error('Failed to sign in anonymously:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,10 +59,10 @@ export function LoginScreen(): React.JSX.Element {
                 <Text style={styles.buttonText}>接続中...</Text>
               </View>
             ) : (
-              <Text style={styles.buttonText}>Sign in with Apple</Text>
+              <Text style={styles.buttonText}>匿名で再接続</Text>
             )}
           </TouchableOpacity>
-          <Text style={styles.disclaimer}>MVP: モックログインを使用</Text>
+          <Text style={styles.disclaimer}>MVP: Supabase匿名認証を使用</Text>
         </View>
       </View>
     </SafeAreaView>

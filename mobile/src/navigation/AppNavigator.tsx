@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { NavigationContainer, useNavigation } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PermissionScreen } from '../screens/PermissionScreen';
 import { PickAppsScreen } from '../screens/PickAppsScreen';
@@ -11,6 +12,7 @@ import { DashboardScreen } from '../screens/DashboardScreen';
 import { RootStackParamList } from './types';
 import { useApp } from '../lib/app-context';
 import type { AppStep } from '../types/domain';
+import { colors } from '../lib/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -51,6 +53,16 @@ function NavigationHandler() {
 }
 
 export function AppNavigator(): React.JSX.Element {
+  const { isAuthInitializing } = useApp();
+
+  if (isAuthInitializing) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
+
   return (
     <NavigationContainer>
       <NavigationHandler />
@@ -70,3 +82,12 @@ export function AppNavigator(): React.JSX.Element {
     </NavigationContainer>
   );
 }
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.background,
+  },
+});
