@@ -19,7 +19,7 @@ const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
 
 export function PaymentScreen(): React.JSX.Element {
   const { setPaymentCompleted, setStep } = useApp();
-  const { confirmPayment, createPaymentMethod } = useStripe();
+  const { confirmPayment } = useStripe();
   const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
