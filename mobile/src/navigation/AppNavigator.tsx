@@ -31,6 +31,19 @@ const STEP_TO_SCREEN: Record<AppStep, keyof RootStackParamList> = {
 export function AppNavigator(): React.JSX.Element {
   const { isAuthInitializing, step } = useApp();
   const isNavigationReadyRef = React.useRef(false);
+  const syncRouteWithStep = React.useCallback(() => {
+    if (isAuthInitializing) return;
+    if (!isNavigationReadyRef.current || !navigationRef.isReady()) return;
+    const screenName = STEP_TO_SCREEN[step];
+    navigationRef.resetRoot({
+      index: 0,
+      routes: [{ name: screenName }],
+    });
+  }, [isAuthInitializing, step]);
+
+  React.useEffect(() => {
+    syncRouteWithStep();
+  }, [syncRouteWithStep]);
 
   if (isAuthInitializing) {
     return (
@@ -39,19 +52,6 @@ export function AppNavigator(): React.JSX.Element {
       </View>
     );
   }
-
-  const syncRouteWithStep = React.useCallback(() => {
-    if (!isNavigationReadyRef.current || !navigationRef.isReady()) return;
-    const screenName = STEP_TO_SCREEN[step];
-    navigationRef.resetRoot({
-      index: 0,
-      routes: [{ name: screenName }],
-    });
-  }, [step]);
-
-  React.useEffect(() => {
-    syncRouteWithStep();
-  }, [syncRouteWithStep]);
 
   return (
     <NavigationContainer
