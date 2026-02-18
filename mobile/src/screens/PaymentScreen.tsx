@@ -8,7 +8,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { CardField, useStripe, CardFieldInput } from '@stripe/stripe-react-native';
+import {
+  CardField,
+  useStripe,
+  CardFieldInput,
+} from '@stripe/stripe-react-native';
 import { useApp } from '../lib/app-context';
 import { supabase } from '../lib/supabase';
 import { env } from '../config/env';
@@ -21,7 +25,9 @@ const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
 export function PaymentScreen(): React.JSX.Element {
   const { setPaymentCompleted, setStep } = useApp();
   const { confirmPayment } = useStripe();
-  const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(null);
+  const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(
+    null,
+  );
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -38,7 +44,9 @@ export function PaymentScreen(): React.JSX.Element {
 
     try {
       // Get the current session for auth token
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       if (!session) {
         setError('ログインが必要です');
         return;
@@ -51,13 +59,13 @@ export function PaymentScreen(): React.JSX.Element {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session.access_token}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             amount: DEPOSIT_TOTAL,
             currency: 'jpy',
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -72,7 +80,7 @@ export function PaymentScreen(): React.JSX.Element {
       // Confirm payment with Stripe
       const { error: confirmError, paymentIntent } = await confirmPayment(
         clientSecret,
-        { paymentMethodType: 'Card' }
+        { paymentMethodType: 'Card' },
       );
 
       if (confirmError) {
@@ -130,7 +138,9 @@ export function PaymentScreen(): React.JSX.Element {
 
         {/* Test mode notice */}
         <View style={styles.notice}>
-          <Text style={styles.noticeText}>テストモード: 実際の請求は行われません</Text>
+          <Text style={styles.noticeText}>
+            テストモード: 実際の請求は行われません
+          </Text>
         </View>
 
         {/* Payment form */}

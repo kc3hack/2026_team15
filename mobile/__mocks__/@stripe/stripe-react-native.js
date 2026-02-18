@@ -2,7 +2,7 @@ import React from 'react';
 
 export const StripeProvider = ({ children }) => children;
 
-export const CardField = (props) => {
+export const CardField = props => {
   return null;
 };
 
