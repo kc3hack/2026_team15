@@ -128,11 +128,11 @@ npm run mobile:ios
 ## 6. 次に実装する項目（推奨順）
 
 1. Sign in with Apple の実装（RN + Supabase Auth）
-2. iOS Screen Time ネイティブモジュール（Swift）実装
-3. 契約作成時の `contracts` / `ledger_entries(deposit)` 挿入
-4. `record-violation` 呼び出しと Dashboard 再取得ロジック
+2. 契約作成時の `contracts` / `ledger_entries(deposit)` 挿入
+3. `record-violation` 呼び出しと Dashboard 再取得ロジック
+4. モック状態管理の永続化（必要なら AsyncStorage）
 
-Screen Time capability の設定チェックは `docs/ios-capabilities.md` を参照してください。
+Screen Time API は現行 MVP ではモック運用です。将来ネイティブ連携を再開する場合は `docs/ios-capabilities.md` を参照してください。
 
 ## 7. CI / CD
 

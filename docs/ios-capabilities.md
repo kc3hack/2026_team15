@@ -1,6 +1,7 @@
 # iOS Capability Checklist（YOHAKU）
 
-Screen Time API を使うため、Xcode で以下を有効化してください。
+現行 MVP は **Screen Time API をモックで代替**しています。
+このドキュメントは、将来ネイティブ連携を再開する場合のメモです。
 
 ## 1. Signing & Capabilities
 
@@ -23,7 +24,12 @@ Screen Time API を使うため、Xcode で以下を有効化してください�
 
 ## 4. このリポジトリ上の入口
 
-- RN 側: `mobile/src/native/screenTime.ts`
-- iOS 実装予定: `mobile/ios/mobile` 配下に `ScreenTimeModule.swift` を追加
+- 現行モック実装: `mobile/src/lib/mock-store.ts`
+- 画面フロー連携: `mobile/src/lib/app-context.tsx`
+- ネイティブ連携の将来入口: `mobile/src/native/screenTime.ts`
 
-> 現在は RN 側に fallback 実装があり、Swift モジュール未実装でも画面遷移の検証は可能です。
+## 5. 現行方針（develop）
+
+- 許可取得 / アプリ選択 / 使用時間監視 / ロックはすべてモックで検証
+- 実機の Screen Time capability は現時点では必須ではない
+- ハッカソン期間中は UI/状態遷移/契約ロジックの完成度を優先
