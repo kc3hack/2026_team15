@@ -10,6 +10,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardField, useStripe, CardFieldInput } from '@stripe/stripe-react-native';
 import { useApp } from '../lib/app-context';
+import { supabase } from '../lib/supabase';
 import { colors, spacing, borderRadius } from '../lib/theme';
 
 const PENALTY_PER_DAY = 500;
@@ -35,37 +36,55 @@ export function PaymentScreen(): React.JSX.Element {
     setError(null);
 
     try {
-      // ========================================
-      // MVP: 以下はモック実装
-      // 本番では、バックエンドでPaymentIntentを作成し、
-      // clientSecretを取得してconfirmPaymentを呼ぶ
-      // ========================================
+      // Get the current session for auth token
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setError('ログインが必要です');
+        return;
+      }
 
-      // モック: 2秒待機
-      await new Promise<void>(resolve => setTimeout(resolve, 2000));
+      // Call backend to create PaymentIntent
+      const response = await fetch(
+        `${supabase.supabaseUrl}/functions/v1/create-payment-intent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            amount: DEPOSIT_TOTAL,
+            currency: 'jpy',
+          }),
+        }
+      );
 
-      console.log('[MVP] Mock payment processed', {
-        last4: cardDetails?.last4 ?? '****',
-        brand: cardDetails?.brand ?? 'unknown',
-        amount: DEPOSIT_TOTAL,
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[Payment] Backend error:', errorData);
+        setError(errorData.error || '決済の準備に失敗しました');
+        return;
+      }
+
+      const { clientSecret } = await response.json();
+
+      // Confirm payment with Stripe
+      const { error: confirmError, paymentIntent } = await confirmPayment(
+        clientSecret,
+        { paymentMethodType: 'Card' }
+      );
+
+      if (confirmError) {
+        console.error('[Payment] Stripe error:', confirmError);
+        setError(confirmError.message ?? '決済エラーが発生しました');
+        return;
+      }
+
+      console.log('[Payment] Success:', {
+        id: paymentIntent?.id,
+        amount: paymentIntent?.amount,
+        status: paymentIntent?.status,
       });
-
-      // 本番実装の例（参考）:
-      // const { error: pmError, paymentMethod } = await createPaymentMethod({
-      //   paymentMethodType: 'Card',
-      // });
-      // if (pmError) {
-      //   setError(pmError.message ?? '決済エラーが発生しました');
-      //   return;
-      // }
-      // const clientSecret = await fetchClientSecretFromBackend(paymentMethod.id);
-      // const { error: confirmError } = await confirmPayment(clientSecret, {
-      //   paymentMethodType: 'Card',
-      // });
-      // if (confirmError) {
-      //   setError(confirmError.message ?? '決済エラーが発生しました');
-      //   return;
-      // }
 
       setPaymentCompleted(true);
       setStep('create-contract');
@@ -108,9 +127,9 @@ export function PaymentScreen(): React.JSX.Element {
           </Text>
         </View>
 
-        {/* Mock notice */}
+        {/* Test mode notice */}
         <View style={styles.notice}>
-          <Text style={styles.noticeText}>MVP: 実際の決済は行われません</Text>
+          <Text style={styles.noticeText}>テストモード: 実際の請求は行われません</Text>
         </View>
 
         {/* Payment form */}
