@@ -1,7 +1,6 @@
-import React, { useEffect, useRef } from 'react';
-import { NavigationContainer, useNavigation } from '@react-navigation/native';
+import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { LoginScreen } from '../screens/LoginScreen';
 import { PermissionScreen } from '../screens/PermissionScreen';
@@ -25,28 +24,8 @@ const STEP_TO_SCREEN: Record<AppStep, keyof RootStackParamList> = {
   dashboard: 'Dashboard',
 };
 
-function NavigationHandler() {
-  const { step } = useApp();
-  const navigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const lastStepRef = useRef<AppStep | null>(null);
-
-  useEffect(() => {
-    // 初回マウント時も含め、現在のstepに同期する
-    if (lastStepRef.current === step) return;
-    lastStepRef.current = step;
-    const screenName = STEP_TO_SCREEN[step];
-    navigation.reset({
-      index: 0,
-      routes: [{ name: screenName }],
-    });
-  }, [step, navigation]);
-
-  return null;
-}
-
 export function AppNavigator(): React.JSX.Element {
-  const { isAuthInitializing } = useApp();
+  const { isAuthInitializing, step } = useApp();
 
   if (isAuthInitializing) {
     return (
@@ -58,9 +37,9 @@ export function AppNavigator(): React.JSX.Element {
 
   return (
     <NavigationContainer>
-      <NavigationHandler />
       <Stack.Navigator
-        initialRouteName="Login"
+        key={step}
+        initialRouteName={STEP_TO_SCREEN[step]}
         screenOptions={{
           headerShown: false,
         }}
