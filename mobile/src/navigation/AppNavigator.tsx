@@ -1,5 +1,8 @@
 import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+} from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { LoginScreen } from '../screens/LoginScreen';
@@ -14,6 +17,7 @@ import type { AppStep } from '../types/domain';
 import { colors } from '../lib/theme';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+const navigationRef = createNavigationContainerRef<RootStackParamList>();
 
 const STEP_TO_SCREEN: Record<AppStep, keyof RootStackParamList> = {
   login: 'Login',
@@ -26,6 +30,7 @@ const STEP_TO_SCREEN: Record<AppStep, keyof RootStackParamList> = {
 
 export function AppNavigator(): React.JSX.Element {
   const { isAuthInitializing, step } = useApp();
+  const isNavigationReadyRef = React.useRef(false);
 
   if (isAuthInitializing) {
     return (
@@ -35,11 +40,29 @@ export function AppNavigator(): React.JSX.Element {
     );
   }
 
+  const syncRouteWithStep = React.useCallback(() => {
+    if (!isNavigationReadyRef.current || !navigationRef.isReady()) return;
+    const screenName = STEP_TO_SCREEN[step];
+    navigationRef.resetRoot({
+      index: 0,
+      routes: [{ name: screenName }],
+    });
+  }, [step]);
+
+  React.useEffect(() => {
+    syncRouteWithStep();
+  }, [syncRouteWithStep]);
+
   return (
-    <NavigationContainer>
+    <NavigationContainer
+      ref={navigationRef}
+      onReady={() => {
+        isNavigationReadyRef.current = true;
+        syncRouteWithStep();
+      }}
+    >
       <Stack.Navigator
-        key={step}
-        initialRouteName={STEP_TO_SCREEN[step]}
+        initialRouteName="Login"
         screenOptions={{
           headerShown: false,
         }}
