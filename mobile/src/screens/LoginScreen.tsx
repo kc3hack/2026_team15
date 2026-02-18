@@ -16,9 +16,13 @@ export function LoginScreen(): React.JSX.Element {
 
   const handleLogin = async () => {
     setIsLoading(true);
-    await new Promise<void>(resolve => setTimeout(resolve, 800));
-    login();
-    setIsLoading(false);
+    try {
+      await login();
+    } catch (error) {
+      console.error('Failed to sign in:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

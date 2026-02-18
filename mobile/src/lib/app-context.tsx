@@ -3,16 +3,19 @@ import React, {
   useContext,
   useState,
   useCallback,
+  useEffect,
   type ReactNode,
 } from 'react';
 import type { AppStep, AppInfo, Contract, Profile } from '../types/domain';
 import { mockStore } from './mock-store';
+import { supabase } from './supabase';
 
 interface AppContextType {
   step: AppStep;
   setStep: (step: AppStep) => void;
+  isAuthInitializing: boolean;
   profile: Profile | null;
-  login: () => void;
+  login: () => Promise<void>;
   logout: () => void;
   grantPermission: () => void;
   hasPermission: boolean;
@@ -40,6 +43,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState<AppStep>('login');
+  const [isAuthInitializing, setIsAuthInitializing] = useState(true);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [hasPermission, setHasPermission] = useState(false);
   const [selectedApps, setSelectedAppsState] = useState<AppInfo[]>([]);
@@ -52,10 +56,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setRefreshKey] = useState(0);
 
-  const login = useCallback(() => {
-    const p = mockStore.login('mock_apple_user_001');
-    setProfile(p);
-
+  const syncStepFromMockState = useCallback(() => {
     // Check if there's already an active contract
     const existing = mockStore.getActiveContract();
     if (existing) {
@@ -77,7 +78,83 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  const ensureAuthenticatedProfile = useCallback(async (): Promise<Profile> => {
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) {
+      throw sessionError;
+    }
+
+    let session = sessionData.session;
+    if (!session) {
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInAnonymously();
+      if (signInError) {
+        throw signInError;
+      }
+      session = signInData.session;
+    }
+
+    const user = session?.user;
+    if (!user) {
+      throw new Error('Supabase session user is missing');
+    }
+
+    const { error: upsertError } = await supabase.from('profiles').upsert(
+      {
+        id: user.id,
+        apple_user_id: null,
+      },
+      { onConflict: 'id' },
+    );
+    if (upsertError) {
+      throw upsertError;
+    }
+
+    const { data: profileRow, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, apple_user_id, stripe_customer_id, created_at, updated_at')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profileError) {
+      throw profileError;
+    }
+
+    const now = new Date().toISOString();
+    return {
+      id: profileRow?.id ?? user.id,
+      appleUserId: profileRow?.apple_user_id ?? null,
+      stripeCustomerId: profileRow?.stripe_customer_id ?? null,
+      createdAt: profileRow?.created_at ?? now,
+      updatedAt: profileRow?.updated_at ?? now,
+    };
+  }, []);
+
+  const login = useCallback(async () => {
+    setIsAuthInitializing(true);
+    try {
+      const authenticatedProfile = await ensureAuthenticatedProfile();
+      setProfile(authenticatedProfile);
+      mockStore.login(authenticatedProfile.id);
+      syncStepFromMockState();
+    } finally {
+      setIsAuthInitializing(false);
+    }
+  }, [ensureAuthenticatedProfile, syncStepFromMockState]);
+
+  useEffect(() => {
+    void login().catch(error => {
+      console.error('Failed to initialize auth session:', error);
+      setProfile(null);
+      setStep('login');
+      setIsAuthInitializing(false);
+    });
+  }, [login]);
+
   const logout = useCallback(() => {
+    void supabase.auth.signOut().catch(error => {
+      console.warn('Failed to sign out from Supabase:', error);
+    });
     mockStore.logout();
     setProfile(null);
     setHasPermission(false);
@@ -137,6 +214,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       value={{
         step,
         setStep,
+        isAuthInitializing,
         profile,
         login,
         logout,
