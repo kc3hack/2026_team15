@@ -11,6 +11,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { CardField, useStripe, CardFieldInput } from '@stripe/stripe-react-native';
 import { useApp } from '../lib/app-context';
 import { supabase } from '../lib/supabase';
+import { env } from '../config/env';
 import { colors, spacing, borderRadius } from '../lib/theme';
 
 const PENALTY_PER_DAY = 500;
@@ -45,7 +46,7 @@ export function PaymentScreen(): React.JSX.Element {
 
       // Call backend to create PaymentIntent
       const response = await fetch(
-        `${supabase.supabaseUrl}/functions/v1/create-payment-intent`,
+        `${env.supabaseUrl}/functions/v1/create-payment-intent`,
         {
           method: 'POST',
           headers: {
