@@ -179,12 +179,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const createContract = useCallback(
     async (dailyLimitSeconds: number) => {
-      if (!pendingContractData || selectedApps.length === 0) {
-        console.error(
-          '[createContract] Missing pendingContractData or selectedApps',
-        );
+      if (selectedApps.length === 0) {
+        console.error('[createContract] No selected apps');
         return;
       }
+
+      // Calculate deposit total (500 yen/day * 7 days)
+      const depositTotal = 500 * 7;
 
       try {
         const {
@@ -205,7 +206,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             },
             body: JSON.stringify({
               dailyLimitSeconds,
-              depositTotal: pendingContractData.depositTotal,
+              depositTotal,
               selectedApps: selectedApps.map(app => ({
                 bundleId: app.bundleId,
                 name: app.name,
@@ -246,7 +247,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         console.error('[createContract] Error:', error);
       }
     },
-    [pendingContractData, selectedApps, profile?.id],
+    [selectedApps, profile?.id],
   );
 
   const refreshContract = useCallback(() => {
