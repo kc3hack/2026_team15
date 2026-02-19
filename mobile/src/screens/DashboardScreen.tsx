@@ -39,13 +39,7 @@ function InfoCell({
   success?: boolean;
 }) {
   return (
-    <View
-      style={[
-        styles.infoCell,
-        danger && styles.infoCellDanger,
-        highlight && styles.infoCellHighlight,
-      ]}
-    >
+    <View style={[styles.infoCell, highlight && styles.infoCellHighlight]}>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text
         style={[
@@ -156,16 +150,6 @@ function ActiveDashboard({
           </TouchableOpacity>
         </View>
 
-        {/* Shield alert */}
-        {isShielded && (
-          <View style={styles.shieldAlert}>
-            <Text style={styles.shieldTitle}>制限中</Text>
-            <Text style={styles.shieldText}>
-              本日は上限を超過しました。対象アプリはロックされています。
-            </Text>
-          </View>
-        )}
-
         {/* Contract info card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -240,9 +224,9 @@ function ActiveDashboard({
           )}
           {todayViolation && (
             <View style={styles.todayAlert}>
-              <Text style={styles.todayAlertTitle}>本日は違反扱いです</Text>
+              <Text style={styles.todayAlertTitle}>制限中</Text>
               <Text style={styles.todayAlertText}>
-                ペナルティが計上され、対象アプリはロック中です。
+                本日は上限を超過しました。対象アプリはロックされています。
               </Text>
             </View>
           )}
@@ -276,15 +260,6 @@ function ActiveDashboard({
               danger={totalPenalty > 0}
             />
           </View>
-          {totalPenalty > 0 && (
-            <View style={styles.paymentAlert}>
-              <Text style={styles.paymentAlertTitle}>支払い発生中</Text>
-              <Text style={styles.paymentAlertText}>
-                現在までのペナルティ支払い合計は {totalPenalty.toLocaleString()}
-                円です。
-              </Text>
-            </View>
-          )}
         </View>
 
         {/* Mock simulator */}
@@ -529,25 +504,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
   },
-  // Shield alert
-  shieldAlert: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
-  },
-  shieldTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  shieldText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
   // Card styles
   card: {
     backgroundColor: colors.surface,
@@ -589,11 +545,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     padding: spacing.md,
     gap: 2,
-  },
-  infoCellDanger: {
-    backgroundColor: '#FEE2E2',
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
   },
   infoCellHighlight: {
     borderWidth: 1,
@@ -654,10 +605,8 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xs,
   },
   todayAlert: {
-    backgroundColor: '#FEE2E2',
+    backgroundColor: colors.surfaceAlt,
     borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: '#FCA5A5',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: 2,
@@ -668,25 +617,6 @@ const styles = StyleSheet.create({
     color: colors.danger,
   },
   todayAlertText: {
-    fontSize: 12,
-    color: colors.textSecondary,
-  },
-  paymentAlert: {
-    backgroundColor: '#FEF2F2',
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  paymentAlertTitle: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: colors.danger,
-    marginBottom: 2,
-  },
-  paymentAlertText: {
     fontSize: 12,
     color: colors.textSecondary,
   },

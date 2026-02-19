@@ -18,7 +18,7 @@ const CONTRACT_DAYS = 7;
 const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
 const MIN_LIMIT_SECONDS = 1800;
 const MAX_LIMIT_SECONDS = 18000;
-const LIMIT_STEP_SECONDS = 300;
+const LIMIT_STEP_SECONDS = 900;
 
 function SummaryRow({
   label,
@@ -51,6 +51,7 @@ export function CreateContractScreen(): React.JSX.Element {
   const limitRatio =
     (selectedLimit - MIN_LIMIT_SECONDS) /
     (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
+  const thumbLeft = sliderWidth * limitRatio;
 
   const handleCreateContract = async () => {
     setIsCreating(true);
@@ -83,7 +84,9 @@ export function CreateContractScreen(): React.JSX.Element {
       MIN_LIMIT_SECONDS,
       Math.min(MAX_LIMIT_SECONDS, snappedLimit),
     );
-    setSelectedLimit(boundedLimit);
+    if (boundedLimit !== selectedLimit) {
+      setSelectedLimit(boundedLimit);
+    }
   };
 
   const handleSliderLayout = (event: LayoutChangeEvent) => {
@@ -93,79 +96,71 @@ export function CreateContractScreen(): React.JSX.Element {
   if (showConfirm) {
     return (
       <SafeAreaView style={styles.container}>
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.confirmScrollContent}
-        >
-          <View style={styles.confirmContent}>
-            <View style={styles.confirmIcon}>
-              <Text style={styles.confirmIconText}>契</Text>
-            </View>
+        <View style={styles.confirmContent}>
+          <View style={styles.confirmIcon}>
+            <Text style={styles.confirmIconText}>契</Text>
+          </View>
 
-            <View style={styles.confirmText}>
-              <Text style={styles.confirmTitle}>契約を確定しますか？</Text>
-              <Text style={styles.confirmDescription}>
-                一度開始すると、1週間の契約期間中は解除できません。
-              </Text>
-            </View>
+          <View style={styles.confirmText}>
+            <Text style={styles.confirmTitle}>契約を確定しますか？</Text>
+            <Text style={styles.confirmDescription}>
+              一度開始すると、1週間の契約期間中は解除できません。
+            </Text>
+          </View>
 
-            <View style={styles.selectedAppsSection}>
-              <Text style={styles.sectionLabel}>制限対象アプリ</Text>
-              <View style={styles.selectedAppsTags}>
-                {selectedApps.map(app => (
-                  <View key={app.bundleId} style={styles.appTag}>
-                    <Text style={styles.appTagText}>{app.name}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-
-            <View style={styles.summaryCard}>
-              <SummaryRow
-                label="日次上限"
-                value={formatSeconds(selectedLimit)}
-              />
-              <View style={styles.divider} />
-              <SummaryRow
-                label="ペナルティ"
-                value={`${PENALTY_PER_DAY.toLocaleString()}円/日`}
-              />
-              <View style={styles.divider} />
-              <SummaryRow label="契約期間" value={`${CONTRACT_DAYS}日間`} />
-              <View style={styles.divider} />
-              <SummaryRow
-                label="デポジット"
-                value={`${DEPOSIT_TOTAL.toLocaleString()}円`}
-                highlight
-              />
-            </View>
-
-            <View style={styles.confirmButtons}>
-              <TouchableOpacity
-                style={styles.button}
-                onPress={handleCreateContract}
-                disabled={isCreating}
-                activeOpacity={0.7}
-              >
-                {isCreating ? (
-                  <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="small" color={colors.surface} />
-                    <Text style={styles.buttonText}>契約を作成中...</Text>
-                  </View>
-                ) : (
-                  <Text style={styles.buttonText}>契約を確定する</Text>
-                )}
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.buttonGhost}
-                onPress={() => setShowConfirm(false)}
-                disabled={isCreating}
-              >
-                <Text style={styles.buttonGhostText}>戻る</Text>
-              </TouchableOpacity>
+          <View style={styles.selectedAppsSection}>
+            <Text style={styles.sectionLabel}>制限対象アプリ</Text>
+            <View style={styles.selectedAppsTags}>
+              {selectedApps.map(app => (
+                <View key={app.bundleId} style={styles.appTag}>
+                  <Text style={styles.appTagText}>{app.name}</Text>
+                </View>
+              ))}
             </View>
           </View>
-        </ScrollView>
+
+          <View style={styles.summaryCard}>
+            <SummaryRow label="日次上限" value={formatSeconds(selectedLimit)} />
+            <View style={styles.divider} />
+            <SummaryRow
+              label="ペナルティ"
+              value={`${PENALTY_PER_DAY.toLocaleString()}円/日`}
+            />
+            <View style={styles.divider} />
+            <SummaryRow label="契約期間" value={`${CONTRACT_DAYS}日間`} />
+            <View style={styles.divider} />
+            <SummaryRow
+              label="デポジット"
+              value={`${DEPOSIT_TOTAL.toLocaleString()}円`}
+              highlight
+            />
+          </View>
+
+          <View style={styles.confirmButtons}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={handleCreateContract}
+              disabled={isCreating}
+              activeOpacity={0.7}
+            >
+              {isCreating ? (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="small" color={colors.surface} />
+                  <Text style={styles.buttonText}>契約を作成中...</Text>
+                </View>
+              ) : (
+                <Text style={styles.buttonText}>契約を確定する</Text>
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.buttonGhost}
+              onPress={() => setShowConfirm(false)}
+              disabled={isCreating}
+            >
+              <Text style={styles.buttonGhostText}>戻る</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
       </SafeAreaView>
     );
   }
@@ -217,18 +212,14 @@ export function CreateContractScreen(): React.JSX.Element {
               updateLimitBySliderPosition(event.nativeEvent.locationX)
             }
           >
-            <View
-              style={[styles.sliderProgress, { width: `${limitRatio * 100}%` }]}
-            />
-            <View
-              style={[styles.sliderThumb, { left: `${limitRatio * 100}%` }]}
-            />
+            <View style={[styles.sliderProgress, { width: thumbLeft }]} />
+            <View style={[styles.sliderThumb, { left: thumbLeft - 12 }]} />
           </View>
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>
               {formatSeconds(MIN_LIMIT_SECONDS)}
             </Text>
-            <Text style={styles.sliderStepText}>5分刻みで調整</Text>
+            <Text style={styles.sliderStepText}>15分刻みで調整</Text>
             <Text style={styles.sliderLabel}>
               {formatSeconds(MAX_LIMIT_SECONDS)}
             </Text>
@@ -460,14 +451,12 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   confirmContent: {
+    flex: 1,
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxl,
     paddingBottom: spacing.xxl,
-    justifyContent: 'flex-start',
+    justifyContent: 'center',
     alignItems: 'center',
-  },
-  confirmScrollContent: {
-    paddingBottom: spacing.xl,
   },
   confirmIcon: {
     width: 72,

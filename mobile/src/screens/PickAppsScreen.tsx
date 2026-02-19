@@ -55,20 +55,6 @@ export function PickAppsScreen(): React.JSX.Element {
             使用時間を制限したいアプリを選んでください。
           </Text>
         </View>
-        <View style={styles.selectionSummary}>
-          <Text style={styles.selectionSummaryLabel}>現在の選択</Text>
-          <Text style={styles.selectionSummaryValue}>
-            {selected.size}個のアプリ
-          </Text>
-          {selected.size > 0 && (
-            <TouchableOpacity
-              style={styles.clearButton}
-              onPress={() => setSelected(new Set())}
-            >
-              <Text style={styles.clearButtonText}>選択をクリア</Text>
-            </TouchableOpacity>
-          )}
-        </View>
 
         {/* App list */}
         <View style={styles.appList}>
@@ -178,38 +164,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
-  },
-  selectionSummary: {
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: spacing.md,
-    marginBottom: spacing.xl,
-  },
-  selectionSummaryLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  selectionSummaryValue: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: colors.text,
-  },
-  clearButton: {
-    marginTop: spacing.sm,
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surfaceAlt,
-  },
-  clearButtonText: {
-    fontSize: 12,
-    color: colors.textSecondary,
   },
   appList: {
     gap: spacing.xl,
