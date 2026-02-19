@@ -12,16 +12,31 @@ import { mockStore, formatSeconds } from '../lib/mock-store';
 import { colors, spacing, borderRadius } from '../lib/theme';
 import type { Contract } from '../types/domain';
 
+function toLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function diffDays(from: string, to: string): number {
+  const fromMs = new Date(`${from}T00:00:00`).getTime();
+  const toMs = new Date(`${to}T00:00:00`).getTime();
+  return Math.floor((toMs - fromMs) / (1000 * 60 * 60 * 24));
+}
+
 function InfoCell({
   label,
   value,
   highlight = false,
   danger = false,
+  success = false,
 }: {
   label: string;
   value: string;
   highlight?: boolean;
   danger?: boolean;
+  success?: boolean;
 }) {
   return (
     <View style={styles.infoCell}>
@@ -31,6 +46,7 @@ function InfoCell({
           styles.infoValue,
           danger && styles.infoValueDanger,
           highlight && styles.infoValueHighlight,
+          success && styles.infoValueSuccess,
         ]}
       >
         {value}
@@ -80,11 +96,19 @@ function ActiveDashboard({
   const todayUsage = mockStore.getTodayTotalUsage();
   const todayViolation = mockStore.getTodayViolation(contract.id);
   const violationDays = mockStore.getViolationDaysCount(contract.id);
-  const successDays = Math.max(0, 7 - violationDays);
   const balance = mockStore.getContractBalance(contract.id);
   const totalPenalty = mockStore.getTotalPenalty(contract.id);
   const isShielded = mockStore.isShieldActive();
   const mockLocalDate = mockStore.getMockLocalDate();
+  const startLocalDate = toLocalDateString(new Date(contract.startAt));
+  const completedDays = Math.max(
+    0,
+    Math.min(7, diffDays(startLocalDate, mockLocalDate)),
+  );
+  const completedViolationDays = mockStore
+    .getViolationsForContract(contract.id)
+    .filter(v => v.date < mockLocalDate).length;
+  const successDays = Math.max(0, completedDays - completedViolationDays);
   const usagePercent = Math.min(
     100,
     (todayUsage / contract.dailyLimitSeconds) * 100,
@@ -221,27 +245,22 @@ function ActiveDashboard({
               danger={violationDays > 0}
             />
             <InfoCell
+              label="成功日数"
+              value={`${successDays}日 / 7日`}
+              success
+            />
+          </View>
+          <View style={styles.infoGrid}>
+            <InfoCell
               label="残高"
               value={`${balance.toLocaleString()}円`}
               highlight
             />
-          </View>
-          <View style={styles.successRow}>
-            <Text style={styles.successLabel}>成功日数</Text>
-            <Text style={styles.successValue}>{`${successDays}日 / 7日`}</Text>
-          </View>
-          <View style={styles.penaltyRow}>
-            <Text style={styles.penaltyLabel}>支払額</Text>
-            <Text
-              style={[
-                styles.penaltyValue,
-                totalPenalty > 0
-                  ? styles.penaltyValueDanger
-                  : styles.penaltyValueNormal,
-              ]}
-            >
-              {`${totalPenalty.toLocaleString()}円`}
-            </Text>
+            <InfoCell
+              label="支払額"
+              value={`${totalPenalty.toLocaleString()}円`}
+              danger={totalPenalty > 0}
+            />
           </View>
         </View>
 
@@ -563,6 +582,9 @@ const styles = StyleSheet.create({
   infoValueHighlight: {
     fontWeight: '600',
   },
+  infoValueSuccess: {
+    color: colors.success,
+  },
   // App tags
   appTags: {
     flexDirection: 'row',
@@ -687,51 +709,6 @@ const styles = StyleSheet.create({
   simButtonText: {
     fontSize: 13,
     color: colors.text,
-  },
-  penaltyRow: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  penaltyLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  penaltyValue: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  penaltyValueNormal: {
-    color: colors.textSecondary,
-  },
-  penaltyValueDanger: {
-    color: colors.danger,
-  },
-  successRow: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.sm,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  successLabel: {
-    fontSize: 12,
-    color: colors.textMuted,
-  },
-  successValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: colors.success,
   },
   dayProgressSection: {
     gap: spacing.sm,
