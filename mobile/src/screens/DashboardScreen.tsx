@@ -81,6 +81,7 @@ function ActiveDashboard({
   const todayViolation = mockStore.getTodayViolation(contract.id);
   const violationDays = mockStore.getViolationDaysCount(contract.id);
   const balance = mockStore.getContractBalance(contract.id);
+  const totalPenalty = mockStore.getTotalPenalty(contract.id);
   const isShielded = mockStore.isShieldActive();
   const mockLocalDate = mockStore.getMockLocalDate();
   const usagePercent = Math.min(
@@ -223,6 +224,19 @@ function ActiveDashboard({
               value={`${balance.toLocaleString()}円`}
               highlight
             />
+          </View>
+          <View style={styles.penaltyRow}>
+            <Text style={styles.penaltyLabel}>支払額</Text>
+            <Text
+              style={[
+                styles.penaltyValue,
+                totalPenalty > 0
+                  ? styles.penaltyValueDanger
+                  : styles.penaltyValueNormal,
+              ]}
+            >
+              {`${totalPenalty.toLocaleString()}円`}
+            </Text>
           </View>
         </View>
 
@@ -668,6 +682,31 @@ const styles = StyleSheet.create({
   simButtonText: {
     fontSize: 13,
     color: colors.text,
+  },
+  penaltyRow: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  penaltyLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  penaltyValue: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  penaltyValueNormal: {
+    color: colors.textSecondary,
+  },
+  penaltyValueDanger: {
+    color: colors.danger,
   },
   dayProgressSection: {
     gap: spacing.sm,
