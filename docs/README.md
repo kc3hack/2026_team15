@@ -88,8 +88,15 @@ Edge Function ローカル実行:
 ```bash
 cp supabase/.env.local.example supabase/.env.local
 # .env.local のキーを設定後
+# STRIPE_SECRET_KEY=sk_test_... を設定
 npm run supabase:functions:serve
 ```
+
+Stripe テストカード（MVP 検証用）:
+
+- カード番号: `4242 4242 4242 4242`
+- 有効期限: 任意
+- CVC: 任意
 
 ## 3. 起動
 
