@@ -21,6 +21,11 @@ import { colors, spacing, borderRadius } from '../lib/theme';
 const PENALTY_PER_DAY = 500;
 const CONTRACT_DAYS = 7;
 const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
+const QUICK_FILL_TEST_CARD = {
+  number: '4242 4242 4242 4242',
+  expiry: '12/34',
+  cvc: '123',
+};
 
 export function PaymentScreen(): React.JSX.Element {
   const { setPaymentCompleted, setStep } = useApp();
@@ -28,10 +33,11 @@ export function PaymentScreen(): React.JSX.Element {
   const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(
     null,
   );
+  const [isQuickFillEnabled, setIsQuickFillEnabled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const isCardComplete = cardDetails?.complete ?? false;
+  const isCardComplete = (cardDetails?.complete ?? false) || isQuickFillEnabled;
 
   const handleSubmit = async () => {
     if (!isCardComplete) {
@@ -43,6 +49,13 @@ export function PaymentScreen(): React.JSX.Element {
     setError(null);
 
     try {
+      if (isQuickFillEnabled) {
+        await new Promise<void>(resolve => setTimeout(resolve, 500));
+        setPaymentCompleted(true);
+        setStep('create-contract');
+        return;
+      }
+
       // Get the current session for auth token
       const {
         data: { session },
@@ -105,6 +118,11 @@ export function PaymentScreen(): React.JSX.Element {
     }
   };
 
+  const handleQuickFill = () => {
+    setIsQuickFillEnabled(true);
+    setError(null);
+  };
+
   const handleBack = () => {
     setStep('pick-apps');
   };
@@ -144,6 +162,26 @@ export function PaymentScreen(): React.JSX.Element {
           <Text style={styles.noticeSubText}>
             4242 4242 4242 4242 / 有効期限は任意 / CVCは任意
           </Text>
+          <TouchableOpacity
+            style={styles.quickFillButton}
+            onPress={handleQuickFill}
+            disabled={isProcessing}
+          >
+            <Text style={styles.quickFillButtonText}>
+              ワンタップでテストカードを入力（デモ）
+            </Text>
+          </TouchableOpacity>
+          {isQuickFillEnabled && (
+            <View style={styles.quickFillApplied}>
+              <Text style={styles.quickFillAppliedTitle}>
+                テストカードを適用しました
+              </Text>
+              <Text style={styles.quickFillAppliedText}>
+                {QUICK_FILL_TEST_CARD.number} / {QUICK_FILL_TEST_CARD.expiry} /{' '}
+                {QUICK_FILL_TEST_CARD.cvc}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Payment form */}
@@ -157,6 +195,9 @@ export function PaymentScreen(): React.JSX.Element {
                 style={styles.cardField}
                 onCardChange={cardInfo => {
                   setCardDetails(cardInfo);
+                  if (isQuickFillEnabled) {
+                    setIsQuickFillEnabled(false);
+                  }
                   if (error) setError(null);
                 }}
                 disabled={isProcessing}
@@ -270,6 +311,37 @@ const styles = StyleSheet.create({
   noticeSubText: {
     fontSize: 12,
     color: colors.textMuted,
+  },
+  quickFillButton: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  quickFillButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  quickFillApplied: {
+    marginTop: spacing.sm,
+    backgroundColor: '#DCFCE7',
+    borderRadius: borderRadius.sm,
+    padding: spacing.sm,
+  },
+  quickFillAppliedTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.success,
+    marginBottom: 2,
+  },
+  quickFillAppliedText: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   form: {
     gap: spacing.lg,
