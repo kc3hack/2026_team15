@@ -239,6 +239,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           selectedCategories: null,
         };
 
+        // Also save to mockStore for compatibility with existing dashboard logic
+        mockStore.setContractFromDB(newContract);
+
         setActiveContract(newContract);
         setPaymentCompleted(false);
         setPendingContractData(null);
