@@ -71,6 +71,33 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     })
 
+    // Check for existing active contract
+    const { data: existingContract } = await adminClient
+      .from("contracts")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle()
+
+    if (existingContract) {
+      // Return existing contract instead of creating a new one
+      return new Response(
+        JSON.stringify({
+          success: true,
+          contract: {
+            id: existingContract.id,
+            startAt: existingContract.start_at,
+            endAt: existingContract.end_at,
+            dailyLimitSeconds: existingContract.daily_limit_seconds,
+            depositTotal: existingContract.deposit_total,
+            selectedApps: existingContract.selected_apps,
+            status: existingContract.status,
+          },
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
     // Calculate contract dates
     const now = new Date()
     const endAt = new Date(now)
@@ -92,6 +119,34 @@ Deno.serve(async (req) => {
       .single()
 
     if (contractError || !contract) {
+      // Handle race condition: if unique constraint violation, fetch and return existing contract
+      if (contractError?.code === "23505") {
+        const { data: existingContract } = await adminClient
+          .from("contracts")
+          .select("*")
+          .eq("user_id", userId)
+          .eq("status", "active")
+          .single()
+
+        if (existingContract) {
+          return new Response(
+            JSON.stringify({
+              success: true,
+              contract: {
+                id: existingContract.id,
+                startAt: existingContract.start_at,
+                endAt: existingContract.end_at,
+                dailyLimitSeconds: existingContract.daily_limit_seconds,
+                depositTotal: existingContract.deposit_total,
+                selectedApps: existingContract.selected_apps,
+                status: existingContract.status,
+              },
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          )
+        }
+      }
+
       console.error("[Contract Error]", contractError)
       return new Response(
         JSON.stringify({ error: "failed_to_create_contract", details: contractError?.message }),
