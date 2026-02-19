@@ -39,7 +39,13 @@ function InfoCell({
   success?: boolean;
 }) {
   return (
-    <View style={styles.infoCell}>
+    <View
+      style={[
+        styles.infoCell,
+        danger && styles.infoCellDanger,
+        highlight && styles.infoCellHighlight,
+      ]}
+    >
       <Text style={styles.infoLabel}>{label}</Text>
       <Text
         style={[
@@ -232,6 +238,14 @@ function ActiveDashboard({
               </Text>
             </View>
           )}
+          {todayViolation && (
+            <View style={styles.todayAlert}>
+              <Text style={styles.todayAlertTitle}>本日は違反扱いです</Text>
+              <Text style={styles.todayAlertText}>
+                ペナルティが計上され、対象アプリはロック中です。
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Weekly section */}
@@ -262,6 +276,15 @@ function ActiveDashboard({
               danger={totalPenalty > 0}
             />
           </View>
+          {totalPenalty > 0 && (
+            <View style={styles.paymentAlert}>
+              <Text style={styles.paymentAlertTitle}>支払い発生中</Text>
+              <Text style={styles.paymentAlertText}>
+                現在までのペナルティ支払い合計は {totalPenalty.toLocaleString()}
+                円です。
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Mock simulator */}
@@ -567,6 +590,15 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     gap: 2,
   },
+  infoCellDanger: {
+    backgroundColor: '#FEE2E2',
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+  },
+  infoCellHighlight: {
+    borderWidth: 1,
+    borderColor: colors.primaryLight,
+  },
   infoLabel: {
     fontSize: 12,
     color: colors.textMuted,
@@ -614,10 +646,49 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   statusBadgeDanger: {
-    backgroundColor: colors.surfaceAlt,
+    backgroundColor: '#FEE2E2',
     borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
+  },
+  todayAlert: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: 2,
+  },
+  todayAlertTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.danger,
+  },
+  todayAlertText: {
+    fontSize: 12,
+    color: colors.textSecondary,
+  },
+  paymentAlert: {
+    backgroundColor: '#FEF2F2',
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    marginTop: spacing.xs,
+  },
+  paymentAlertTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.danger,
+    marginBottom: 2,
+  },
+  paymentAlertText: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   statusBadgeDangerText: {
     fontSize: 12,

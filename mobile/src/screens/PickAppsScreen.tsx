@@ -47,10 +47,27 @@ export function PickAppsScreen(): React.JSX.Element {
       >
         {/* Header */}
         <View style={styles.header}>
+          <View style={styles.stepBadge}>
+            <Text style={styles.stepBadgeText}>STEP 2 / 3</Text>
+          </View>
           <Text style={styles.title}>制限するアプリを選択</Text>
           <Text style={styles.description}>
             使用時間を制限したいアプリを選んでください。
           </Text>
+        </View>
+        <View style={styles.selectionSummary}>
+          <Text style={styles.selectionSummaryLabel}>現在の選択</Text>
+          <Text style={styles.selectionSummaryValue}>
+            {selected.size}個のアプリ
+          </Text>
+          {selected.size > 0 && (
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={() => setSelected(new Set())}
+            >
+              <Text style={styles.clearButtonText}>選択をクリア</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* App list */}
@@ -137,6 +154,20 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: spacing.xl,
   },
+  stepBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    letterSpacing: 0.6,
+    fontWeight: '600',
+    color: colors.textSecondary,
+  },
   title: {
     fontSize: 22,
     fontWeight: '600',
@@ -147,6 +178,38 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     lineHeight: 20,
+  },
+  selectionSummary: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+    padding: spacing.md,
+    marginBottom: spacing.xl,
+  },
+  selectionSummaryLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+    marginBottom: spacing.xs,
+  },
+  selectionSummaryValue: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
+  },
+  clearButton: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surfaceAlt,
+  },
+  clearButtonText: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   appList: {
     gap: spacing.xl,
