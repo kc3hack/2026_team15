@@ -37,6 +37,7 @@ interface AppContextType {
   simulateUsage: (bundleId: string, seconds: number) => void;
   triggerViolation: () => boolean;
   resetDailyShield: () => void;
+  advanceMockDay: () => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -209,6 +210,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
     refreshContract();
   }, [refreshContract]);
 
+  const advanceMockDay = useCallback(() => {
+    mockStore.advanceToNextDay();
+    refreshContract();
+  }, [refreshContract]);
+
   return (
     <AppContext.Provider
       value={{
@@ -232,6 +238,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         simulateUsage,
         triggerViolation,
         resetDailyShield,
+        advanceMockDay,
       }}
     >
       {children}
