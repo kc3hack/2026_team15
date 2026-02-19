@@ -9,6 +9,7 @@ import React, {
 import type { AppStep, AppInfo, Contract, Profile } from '../types/domain';
 import { mockStore } from './mock-store';
 import { supabase } from './supabase';
+import { env } from '../config/env';
 
 interface AppContextType {
   step: AppStep;
@@ -31,7 +32,7 @@ interface AppContextType {
     dailyLimitSeconds: number;
     depositTotal: number;
   }) => void;
-  createContract: (dailyLimitSeconds: number) => void;
+  createContract: (dailyLimitSeconds: number) => Promise<void>;
   activeContract: Contract | null;
   refreshContract: () => void;
   simulateUsage: (bundleId: string, seconds: number) => void;
@@ -176,11 +177,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setSelectedAppsState(apps);
   }, []);
 
-  const createContract = useCallback((dailyLimitSeconds: number) => {
-    const contract = mockStore.createContract(dailyLimitSeconds);
-    setActiveContract(contract);
-    setStep('dashboard');
-  }, []);
+  const createContract = useCallback(
+    async (dailyLimitSeconds: number) => {
+      if (!pendingContractData || selectedApps.length === 0) {
+        console.error(
+          '[createContract] Missing pendingContractData or selectedApps',
+        );
+        return;
+      }
+
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) {
+          console.error('[createContract] No session');
+          return;
+        }
+
+        const response = await fetch(
+          `${env.supabaseUrl}/functions/v1/create-contract`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${session.access_token}`,
+            },
+            body: JSON.stringify({
+              dailyLimitSeconds,
+              depositTotal: pendingContractData.depositTotal,
+              selectedApps: selectedApps.map(app => ({
+                bundleId: app.bundleId,
+                name: app.name,
+                category: app.category,
+              })),
+              contractDays: 7,
+            }),
+          },
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('[createContract] Error:', errorData);
+          return;
+        }
+
+        const { contract } = await response.json();
+
+        // Update local state with the created contract
+        const newContract: Contract = {
+          id: contract.id,
+          userId: profile?.id ?? '',
+          startAt: contract.startAt,
+          endAt: contract.endAt,
+          dailyLimitSeconds: contract.dailyLimitSeconds,
+          penaltyPerDay: 500,
+          depositTotal: contract.depositTotal,
+          status: contract.status,
+          selectedApps: contract.selectedApps,
+          selectedCategories: null,
+        };
+
+        setActiveContract(newContract);
+        setPaymentCompleted(false);
+        setPendingContractData(null);
+        setStep('dashboard');
+      } catch (error) {
+        console.error('[createContract] Error:', error);
+      }
+    },
+    [pendingContractData, selectedApps, profile?.id],
+  );
 
   const refreshContract = useCallback(() => {
     mockStore.checkContractExpiry();
