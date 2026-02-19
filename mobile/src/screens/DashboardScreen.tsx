@@ -80,6 +80,7 @@ function ActiveDashboard({
   const todayUsage = mockStore.getTodayTotalUsage();
   const todayViolation = mockStore.getTodayViolation(contract.id);
   const violationDays = mockStore.getViolationDaysCount(contract.id);
+  const successDays = Math.max(0, 7 - violationDays);
   const balance = mockStore.getContractBalance(contract.id);
   const totalPenalty = mockStore.getTotalPenalty(contract.id);
   const isShielded = mockStore.isShieldActive();
@@ -224,6 +225,10 @@ function ActiveDashboard({
               value={`${balance.toLocaleString()}円`}
               highlight
             />
+          </View>
+          <View style={styles.successRow}>
+            <Text style={styles.successLabel}>成功日数</Text>
+            <Text style={styles.successValue}>{`${successDays}日 / 7日`}</Text>
           </View>
           <View style={styles.penaltyRow}>
             <Text style={styles.penaltyLabel}>支払額</Text>
@@ -707,6 +712,26 @@ const styles = StyleSheet.create({
   },
   penaltyValueDanger: {
     color: colors.danger,
+  },
+  successRow: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  successLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  successValue: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: colors.success,
   },
   dayProgressSection: {
     gap: spacing.sm,
