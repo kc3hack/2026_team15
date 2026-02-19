@@ -6,8 +6,15 @@ import React, {
   useEffect,
   type ReactNode,
 } from 'react';
-import type { AppStep, AppInfo, Contract, Profile } from '../types/domain';
-import { mockStore } from './mock-store';
+import type {
+  AppStep,
+  AppInfo,
+  Contract,
+  LedgerEntry,
+  Profile,
+  Violation,
+} from '../types/domain';
+import { getLocalDate, mockStore } from './mock-store';
 import { supabase } from './supabase';
 
 interface AppContextType {
@@ -35,7 +42,7 @@ interface AppContextType {
   activeContract: Contract | null;
   refreshContract: () => void;
   simulateUsage: (bundleId: string, seconds: number) => void;
-  triggerViolation: () => boolean;
+  triggerViolation: () => Promise<boolean>;
   resetDailyShield: () => void;
 }
 
@@ -189,6 +196,71 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setRefreshKey(k => k + 1);
   }, []);
 
+  const fetchViolations = useCallback(
+    async (contractId: string): Promise<Violation[]> => {
+      const { data, error } = await supabase
+        .from('violations')
+        .select(
+          'id, contract_id, user_id, date, exceeded_at, penalty_amount, created_at',
+        )
+        .eq('contract_id', contractId)
+        .order('date', { ascending: false });
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []).map(row => ({
+        id: row.id,
+        contractId: row.contract_id,
+        userId: row.user_id,
+        date: row.date,
+        exceededAt: row.exceeded_at,
+        penaltyAmount: row.penalty_amount,
+      }));
+    },
+    [],
+  );
+
+  const fetchLedgerEntries = useCallback(
+    async (contractId: string): Promise<LedgerEntry[]> => {
+      const { data, error } = await supabase
+        .from('ledger_entries')
+        .select(
+          'id, user_id, contract_id, type, amount, local_date, note, created_at',
+        )
+        .eq('contract_id', contractId)
+        .order('created_at', { ascending: true });
+      if (error) {
+        throw error;
+      }
+
+      return (data ?? []).map(row => ({
+        id: row.id,
+        userId: row.user_id,
+        contractId: row.contract_id,
+        type: row.type,
+        amount: row.amount,
+        localDate: row.local_date,
+        note: row.note ?? '',
+        createdAt: row.created_at,
+      }));
+    },
+    [],
+  );
+
+  const syncContractFinancials = useCallback(
+    async (contractId: string) => {
+      const [violations, ledgerEntries] = await Promise.all([
+        fetchViolations(contractId),
+        fetchLedgerEntries(contractId),
+      ]);
+      mockStore.replaceViolationsForContract(contractId, violations);
+      mockStore.replaceLedgerEntriesForContract(contractId, ledgerEntries);
+      mockStore.syncShieldState(contractId);
+    },
+    [fetchLedgerEntries, fetchViolations],
+  );
+
   const simulateUsage = useCallback(
     (bundleId: string, seconds: number) => {
       mockStore.simulateUsage(bundleId, seconds);
@@ -197,12 +269,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     [refreshContract],
   );
 
-  const triggerViolation = useCallback((): boolean => {
+  const triggerViolation = useCallback(async (): Promise<boolean> => {
     if (!activeContract) return false;
-    const result = mockStore.recordViolation(activeContract.id);
-    refreshContract();
-    return result !== null;
-  }, [activeContract, refreshContract]);
+
+    const exceededAt = new Date().toISOString();
+    const localDate = getLocalDate();
+
+    try {
+      const { data, error } = await supabase.functions.invoke<{
+        ok: boolean;
+        result?: { violation_applied?: boolean };
+      }>('record-violation', {
+        body: {
+          contractId: activeContract.id,
+          exceededAt,
+          localDate,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      await syncContractFinancials(activeContract.id);
+      refreshContract();
+      return Boolean(data?.result?.violation_applied);
+    } catch (error) {
+      console.warn('Failed to record violation via Edge Function:', error);
+      const result = mockStore.recordViolation(activeContract.id);
+      refreshContract();
+      return result !== null;
+    }
+  }, [activeContract, refreshContract, syncContractFinancials]);
 
   const resetDailyShield = useCallback(() => {
     mockStore.resetDailyShield();

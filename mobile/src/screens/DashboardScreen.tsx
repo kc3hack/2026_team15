@@ -60,7 +60,7 @@ function ActiveDashboard({
 }: {
   contract: Contract;
   simulateUsage: (bundleId: string, seconds: number) => void;
-  triggerViolation: () => boolean;
+  triggerViolation: () => Promise<boolean>;
   resetDailyShield: () => void;
   logout: () => void;
 }) {
@@ -97,7 +97,7 @@ function ActiveDashboard({
 
         const newUsage = mockStore.getTodayTotalUsage();
         if (newUsage >= contract.dailyLimitSeconds && !todayViolation) {
-          triggerViolation();
+          void triggerViolation();
         }
       }
     },
