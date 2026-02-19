@@ -56,12 +56,14 @@ function ActiveDashboard({
   simulateUsage,
   triggerViolation,
   resetDailyShield,
+  advanceMockDay,
   logout,
 }: {
   contract: Contract;
   simulateUsage: (bundleId: string, seconds: number) => void;
   triggerViolation: () => boolean;
   resetDailyShield: () => void;
+  advanceMockDay: () => void;
   logout: () => void;
 }) {
   const [showSimulator, setShowSimulator] = useState(false);
@@ -80,6 +82,7 @@ function ActiveDashboard({
   const violationDays = mockStore.getViolationDaysCount(contract.id);
   const balance = mockStore.getContractBalance(contract.id);
   const isShielded = mockStore.isShieldActive();
+  const mockLocalDate = mockStore.getMockLocalDate();
   const usagePercent = Math.min(
     100,
     (todayUsage / contract.dailyLimitSeconds) * 100,
@@ -255,6 +258,17 @@ function ActiveDashboard({
                   onPress={() => handleSimulateUsage(60)}
                 />
               </View>
+              <View style={styles.dayProgressSection}>
+                <Text style={styles.dayProgressLabel}>
+                  シミュレーション日付: {mockLocalDate}
+                </Text>
+                <TouchableOpacity
+                  style={styles.dayAdvanceButton}
+                  onPress={advanceMockDay}
+                >
+                  <Text style={styles.dayAdvanceText}>次の日へ進める</Text>
+                </TouchableOpacity>
+              </View>
               {isShielded && (
                 <TouchableOpacity
                   style={styles.resetButton}
@@ -358,6 +372,7 @@ export function DashboardScreen(): React.JSX.Element {
     simulateUsage,
     triggerViolation,
     resetDailyShield,
+    advanceMockDay,
     logout,
     setStep,
   } = useApp();
@@ -400,6 +415,7 @@ export function DashboardScreen(): React.JSX.Element {
         simulateUsage={simulateUsage}
         triggerViolation={triggerViolation}
         resetDailyShield={resetDailyShield}
+        advanceMockDay={advanceMockDay}
         logout={logout}
       />
     );
@@ -650,6 +666,25 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   simButtonText: {
+    fontSize: 13,
+    color: colors.text,
+  },
+  dayProgressSection: {
+    gap: spacing.sm,
+  },
+  dayProgressLabel: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  dayAdvanceButton: {
+    backgroundColor: colors.background,
+    borderRadius: borderRadius.sm,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dayAdvanceText: {
     fontSize: 13,
     color: colors.text,
   },
