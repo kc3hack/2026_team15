@@ -9,6 +9,7 @@ import React, {
 import type { AppStep, AppInfo, Contract, Profile } from '../types/domain';
 import { mockStore } from './mock-store';
 import { supabase } from './supabase';
+import { notifyIfThresholdReached } from './usage-warning-notifier';
 
 interface AppContextType {
   step: AppStep;
@@ -193,6 +194,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const simulateUsage = useCallback(
     (bundleId: string, seconds: number) => {
       mockStore.simulateUsage(bundleId, seconds);
+      const contract = mockStore.getActiveContract();
+      if (contract) {
+        void notifyIfThresholdReached({
+          contractId: contract.id,
+          localDate: mockStore.getMockLocalDate(),
+          usageSeconds: mockStore.getTodayTotalUsage(),
+          dailyLimitSeconds: contract.dailyLimitSeconds,
+        }).catch(error => {
+          console.warn('Failed to send usage warning notification:', error);
+        });
+      }
       refreshContract();
     },
     [refreshContract],

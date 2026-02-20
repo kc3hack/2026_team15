@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../lib/app-context';
 import { colors, spacing, borderRadius } from '../lib/theme';
+import { requestPermission as requestNotificationPermission } from '../lib/usage-warning-notifier';
 
 function PermissionItem({
   label,
@@ -32,6 +33,14 @@ export function PermissionScreen(): React.JSX.Element {
 
   const handleGrant = async () => {
     setIsGranting(true);
+    try {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        console.warn('Notification permission denied or unavailable');
+      }
+    } catch (error) {
+      console.warn('Failed to request notification permission:', error);
+    }
     await new Promise<void>(resolve => setTimeout(resolve, 1200));
     setGranted(true);
     setIsGranting(false);

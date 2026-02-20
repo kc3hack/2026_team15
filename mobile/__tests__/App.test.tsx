@@ -9,6 +9,11 @@ jest.mock('../src/navigation/AppNavigator', () => ({
   AppNavigator: () => null,
 }));
 
+jest.mock('../src/lib/usage-warning-notifier', () => ({
+  requestPermission: jest.fn().mockResolvedValue(true),
+  notifyIfThresholdReached: jest.fn().mockResolvedValue(undefined),
+}));
+
 jest.mock('../src/lib/supabase', () => ({
   supabase: {
     auth: {
