@@ -30,9 +30,6 @@ export function LoginScreen(): React.JSX.Element {
       <View style={styles.content}>
         {/* Brand */}
         <View style={styles.brandContainer}>
-          <View style={styles.logo}>
-            <Text style={styles.logoText}>余</Text>
-          </View>
           <Text style={styles.title}>ヨハク</Text>
           <Text style={styles.subtitle}>スマホから、余白を取り戻す</Text>
         </View>
@@ -83,20 +80,6 @@ const styles = StyleSheet.create({
   brandContainer: {
     alignItems: 'center',
     marginBottom: 56,
-  },
-  logo: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  logoText: {
-    fontSize: 36,
-    fontWeight: '500',
-    color: colors.surface,
   },
   title: {
     fontSize: 32,
