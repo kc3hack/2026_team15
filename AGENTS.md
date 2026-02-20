@@ -4,9 +4,9 @@ This document defines mandatory workflow rules for AI agents working in this rep
 
 ## Branching Rules
 
-1. For every new issue or ticket, create a dedicated branch before editing any files.
+1. For every new issue/ticket, create a dedicated branch before editing any files.
 2. Do not implement issue work directly on `develop` or `main`.
-3. Recommended naming:
+3. Recommended branch naming:
    - `feat/issue-<number>-<short-topic>`
    - `fix/issue-<number>-<short-topic>`
    - `chore/issue-<number>-<short-topic>`
@@ -20,10 +20,10 @@ This document defines mandatory workflow rules for AI agents working in this rep
 
 ## Commit and PR Rules
 
-1. Commit messages must start with a type prefix such as `feat:`, `fix:`, `docs:`, `chore:`.
+1. Commit messages must start with a type prefix, such as `feat:`, `fix:`, `docs:`, `chore:`.
 2. Open a PR from the issue branch to `develop` unless instructed otherwise.
 3. Follow `.github/PULL_REQUEST_TEMPLATE.md` when creating a PR.
-4. Include related issue references in PR body when available (for example: `Closes #28`).
+4. In the PR body, always include the related issue reference (for example: `Closes #27`).
 
 ## Change Safety Rules
 
