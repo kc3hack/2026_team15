@@ -148,10 +148,6 @@ export function CreateContractScreen(): React.JSX.Element {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.confirmContent}>
-          <View style={styles.confirmIcon}>
-            <Text style={styles.confirmIconText}>契</Text>
-          </View>
-
           <View style={styles.confirmText}>
             <Text style={styles.confirmTitle}>契約を確定しますか？</Text>
             <Text style={styles.confirmDescription}>
@@ -365,11 +361,13 @@ const styles = StyleSheet.create({
   selectedAppsSection: {
     marginBottom: spacing.xl,
     width: '100%',
+    alignItems: 'center',
   },
   selectedAppsTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
+    justifyContent: 'center',
   },
   appTag: {
     backgroundColor: colors.surfaceAlt,
@@ -446,27 +444,29 @@ const styles = StyleSheet.create({
   summaryCard: {
     backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
-    padding: spacing.lg,
+    padding: spacing.xl,
     borderWidth: 1,
     borderColor: colors.border,
+    width: '100%',
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
   },
   summaryLabel: {
-    fontSize: 14,
+    fontSize: 15,
     color: colors.textSecondary,
   },
   summaryValue: {
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: '500',
     color: colors.text,
   },
   summaryValueHighlight: {
     fontWeight: '600',
+    color: colors.primary,
   },
   divider: {
     height: 1,
@@ -522,20 +522,6 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.xxl,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  confirmIcon: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  confirmIconText: {
-    fontSize: 32,
-    fontWeight: '500',
-    color: colors.surface,
   },
   confirmText: {
     alignItems: 'center',
