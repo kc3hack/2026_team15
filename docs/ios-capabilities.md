@@ -1,53 +1,50 @@
-# iOS Capabilities and Limits
+# iOS Capabilities と制約
 
-This document explains what is currently used and what is optional for future expansion.
+このドキュメントは、現行MVPで何を使っているか・将来何が必要かを整理したものです。
 
-## 1. Current Demo Mode
+## 1. 現行（デモ運用）
 
-Current MVP works without enabling Screen Time capabilities.
+現行MVPは Screen Time capability を有効化しなくても動作します。
 
-- Usage and blocking are simulated in app logic
-- Shield behavior is pseudo UI flow
-- No OS-enforced app lock is applied
+- 使用時間・ブロックはアプリ内モックで再現
+- シールドは疑似UI
+- OSレベルのアプリロックは未実装
 
-For current demo builds, required focus is:
+## 2. 実行に必要な設定
 
-- valid Xcode signing
-- stable runtime/build setup
+`run-ios` / Xcode 実行に必要なのは署名設定です。
 
-## 2. Required for Build
+1. `mobile/ios/mobile.xcworkspace` を開く
+2. Target `mobile` を選択
+3. `Signing & Capabilities` で Team を設定
+4. Bundle Identifier を一意化
+5. `Automatically manage signing` を有効化
 
-For `run-ios` / Xcode run:
+## 3. 将来ネイティブ連携する場合
 
-1. Open `mobile/ios/mobile.xcworkspace`
-2. Select target `mobile`
-3. Set `Team` in Signing & Capabilities
-4. Set unique Bundle Identifier
-5. Enable `Automatically manage signing`
-
-## 3. Optional Future Native Integration
-
-If you move from pseudo shield to native Screen Time integration, review and enable:
+将来、疑似シールドから本物の Screen Time 連携へ進める場合は以下を検討します。
 
 - FamilyControls
 - ManagedSettings
 - DeviceActivity
 
-And update Apple Developer portal setup:
+加えて Apple Developer 側で:
 
-- App ID capability updates
-- provisioning profile regeneration
+- App ID の capability 追加
+- Provisioning Profile の再生成
 
-## 4. Code Entry Points
+## 4. 関連コード
 
-- Current mock source: `mobile/src/lib/mock-store.ts`
-- Current app flow control: `mobile/src/lib/app-context.tsx`
-- Native bridge entry stub: `mobile/src/native/screenTime.ts`
+- モック実装: `mobile/src/lib/mock-store.ts`
+- 画面フロー制御: `mobile/src/lib/app-context.tsx`
+- ネイティブ連携入口（将来用）: `mobile/src/native/screenTime.ts`
 
-## 5. Recommendation
+## 5. 推奨方針
 
-For hackathon/demo timeline:
+ハッカソン期間中は、ネイティブ capability 拡張よりも
 
-- keep current pseudo shield mode
-- avoid native capability expansion unless mandatory
-- prioritize state consistency and demo reliability
+- 状態遷移の一貫性
+- 契約/違反/表示の整合性
+- デモ再現性
+
+を優先するのが現実的です。

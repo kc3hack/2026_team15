@@ -1,93 +1,91 @@
-# YOHAKU Design Doc (Current MVP)
+# YOHAKU 設計ドキュメント（現行MVP）
 
-## 1. Product Goal
+## 1. 目的
 
-YOHAKU is a demo-oriented iOS app that helps users create "time margin" by combining:
+YOHAKU は、スマホ利用に「契約」と「金銭コミットメント（モック）」を組み合わせ、
+ユーザーが時間の余白を作れるようにする iOS 向けアプリです。
 
-- app usage limits
-- a 7-day contract
-- penalty/deposit accounting (mock payment)
+現行MVPでは、審査・デモで安定して再現できることを最優先にしています。
 
-The current implementation prioritizes flow consistency and demo reliability.
+## 2. 現在のスコープ
 
-## 2. Current Scope
+- 対応: iOS（React Native）
+- 認証: Supabase 匿名セッション
+- 契約: 1ユーザー1アクティブ契約
+- 違反: 契約ごとに1日1回まで
+- 日付基準: モック日付（デモ進行を優先）
+- シールド: 疑似シールドUI（OSレベルロックではない）
 
-- Platform: iOS (React Native app)
-- Auth: Supabase anonymous session
-- Contract model: one active contract per user
-- Violation model: one violation per contract per local day
-- Date basis: mock day in app (for demo progression)
-- Shield: pseudo shield UI flow (not OS-enforced lock)
+## 3. システム構成
 
-## 3. System Overview
+### 3.1 モバイルアプリ（React Native）
 
-### Mobile (React Native)
+- 画面遷移とUI
+- 使用時間シミュレーション
+- モック日付の進行
+- Supabase 連携（契約・違反・台帳）
 
-- Screen flow and UI
-- Mock usage simulation and mock-day progression
-- Supabase integration for contract/violation persistence
-- Dashboard rendering based on synchronized contract + ledger state
+### 3.2 Supabase
 
-### Supabase
-
-- Auth (anonymous)
-- Postgres tables: `profiles`, `contracts`, `violations`, `ledger_entries`
-- RPC: `record_violation(...)` for idempotent penalty recording
-- Edge Functions:
+- Auth（匿名認証）
+- DB（`profiles`, `contracts`, `violations`, `ledger_entries`）
+- RPC（`record_violation(...)`）
+- Edge Functions
   - `create-contract`
   - `record-violation`
-  - `create-payment-intent` (test payment path)
+  - `create-payment-intent`（テスト決済導線）
 
-## 4. Data and Constraints
+## 4. データ整合性
 
-### Core constraints
+主な制約:
 
-- one active contract per user (partial unique index)
-- one violation per contract per day (`unique(contract_id, date)`)
-- ledger as source for balance and penalty sum
+- 1ユーザー1アクティブ契約（partial unique index）
+- 1契約1日1違反（`unique(contract_id, date)`）
+- 残高は `ledger_entries` 集計で算出
 
-### Contract lifecycle
+契約ライフサイクル:
 
-1. Create contract (7 days)
-2. Record violations daily (idempotent)
-3. Contract transitions to completed when period ends
-4. New contract can start after completion
+1. 契約作成（7日）
+2. 日次違反記録（冪等）
+3. 契約期間終了で completed
+4. 次の契約を再作成
 
-## 5. Key Implementation Decisions
+## 5. 現在の重要実装方針
 
-### 5.1 Mock-day unified behavior
+### 5.1 モック日付の統一
 
-To avoid demo inconsistencies, contract and violation flows now use mock-day basis:
+デモ中の不整合を防ぐため、契約・違反・表示はモック日付を基準に統一しています。
 
-- client sends `clientNowIso` and `clientLocalDate` when creating contract
-- edge function uses those fields to determine contract period and ledger local date
-- expired active contract is auto-completed before creating/reusing contract
+- `create-contract` 呼び出し時に `clientNowIso` / `clientLocalDate` を送信
+- Edge Function 側でこの値を基準に契約期間と台帳日付を決定
+- 期限切れ active 契約は新規作成前に completed 化
 
-### 5.2 Post-create synchronization
+### 5.2 契約作成後の同期
 
-After contract creation, app synchronizes:
+契約作成後に以下を同期し、Dashboard 表示のズレを抑制します。
 
-- active contract in local mock store
-- violations and ledger entries for dashboard consistency
+- active 契約
+- violations
+- ledger_entries
 
-### 5.3 Startup restoration
+### 5.3 起動時の契約復元
 
-On login/launch, app checks Supabase active contract and routes to Dashboard when found.
+アプリ起動時に Supabase の active 契約を確認し、存在する場合は Dashboard に遷移します。
 
-## 6. Out of Scope (Current MVP)
+## 6. 現時点で対象外
 
-- Sign in with Apple production auth flow
-- OS-level Screen Time shield enforcement
-- real payment settlement/refund
-- multi-platform (Android/Web)
+- Sign in with Apple の本番運用
+- OSレベルの Screen Time ロック
+- 実決済・実返金
+- Android / Web 展開
 
-## 7. Known Trade-offs
+## 7. 既知のトレードオフ
 
-- Pseudo shield is UX-level and not iOS system lock
-- network-dependent synchronization can cause short UI lag
-- demo mode prioritizes deterministic date progression over real-time behavior
+- 疑似シールドはUX表現であり、OS強制ロックではない
+- サーバー再取得が入るため、反映に短い遅延が出る場合がある
+- デモ再現性を優先し、実時間ベース挙動とは一部差がある
 
-## 8. References
+## 8. 参照
 
-- Build steps: `docs/build-guide.md`
-- iOS capability notes: `docs/ios-capabilities.md`
+- ビルド手順: `docs/build-guide.md`
+- iOS capability: `docs/ios-capabilities.md`
