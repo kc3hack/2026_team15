@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,9 +6,12 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  Animated,
+  PanResponder,
   type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { useApp } from '../lib/app-context';
 import { formatSeconds } from '../lib/mock-store';
 import { colors, spacing, borderRadius } from '../lib/theme';
@@ -18,7 +21,7 @@ const CONTRACT_DAYS = 7;
 const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
 const MIN_LIMIT_SECONDS = 1800;
 const MAX_LIMIT_SECONDS = 18000;
-const LIMIT_STEP_SECONDS = 900;
+const LIMIT_STEP_SECONDS = 300;
 
 function SummaryRow({
   label,
@@ -46,12 +49,67 @@ export function CreateContractScreen(): React.JSX.Element {
   const [selectedLimit, setSelectedLimit] = useState(3600);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
-  const [sliderWidth, setSliderWidth] = useState(0);
+  const sliderWidthRef = useRef(0);
+  const thumbPosition = useRef(new Animated.Value(0)).current;
+  const lastSnappedValue = useRef(3600);
+  const initialTouchX = useRef(0);
+  const initialThumbX = useRef(0);
+
+  const updateLimitFromPosition = (positionX: number) => {
+    const width = sliderWidthRef.current;
+    if (width <= 0) return;
+    // Clamp position to keep thumb within bounds (thumb radius is 14px)
+    const thumbRadius = 14;
+    const minX = thumbRadius;
+    const maxX = width - thumbRadius;
+    const clampedX = Math.max(minX, Math.min(maxX, positionX));
+    // Adjust ratio calculation for the reduced range
+    const ratio = (clampedX - thumbRadius) / (width - thumbRadius * 2);
+    const rawLimit =
+      MIN_LIMIT_SECONDS + ratio * (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
+    const snappedLimit =
+      Math.round(rawLimit / LIMIT_STEP_SECONDS) * LIMIT_STEP_SECONDS;
+    const boundedLimit = Math.max(
+      MIN_LIMIT_SECONDS,
+      Math.min(MAX_LIMIT_SECONDS, snappedLimit),
+    );
+
+    // Only update and vibrate when value changes
+    if (boundedLimit !== lastSnappedValue.current) {
+      lastSnappedValue.current = boundedLimit;
+      setSelectedLimit(boundedLimit);
+      // iOS native haptic feedback
+      ReactNativeHapticFeedback.trigger('impactMedium', {
+        enableVibrateFallback: true,
+      });
+    }
+
+    thumbPosition.setValue(clampedX);
+  };
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: (event) => {
+        initialTouchX.current = event.nativeEvent.pageX;
+        initialThumbX.current = event.nativeEvent.locationX;
+        updateLimitFromPosition(event.nativeEvent.locationX);
+      },
+      onPanResponderMove: (event) => {
+        // Calculate new position based on movement from initial touch
+        const deltaX = event.nativeEvent.pageX - initialTouchX.current;
+        const newX = initialThumbX.current + deltaX;
+        updateLimitFromPosition(newX);
+      },
+      onPanResponderRelease: () => {},
+      onPanResponderTerminationRequest: () => false,
+    }),
+  ).current;
 
   const limitRatio =
     (selectedLimit - MIN_LIMIT_SECONDS) /
     (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
-  const thumbLeft = sliderWidth * limitRatio;
 
   const handleCreateContract = async () => {
     setIsCreating(true);
@@ -72,25 +130,18 @@ export function CreateContractScreen(): React.JSX.Element {
     setStep('payment');
   };
 
-  const updateLimitBySliderPosition = (positionX: number) => {
-    if (sliderWidth <= 0) return;
-    const clampedX = Math.max(0, Math.min(sliderWidth, positionX));
-    const ratio = clampedX / sliderWidth;
-    const rawLimit =
-      MIN_LIMIT_SECONDS + ratio * (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
-    const snappedLimit =
-      Math.round(rawLimit / LIMIT_STEP_SECONDS) * LIMIT_STEP_SECONDS;
-    const boundedLimit = Math.max(
-      MIN_LIMIT_SECONDS,
-      Math.min(MAX_LIMIT_SECONDS, snappedLimit),
-    );
-    if (boundedLimit !== selectedLimit) {
-      setSelectedLimit(boundedLimit);
-    }
-  };
-
   const handleSliderLayout = (event: LayoutChangeEvent) => {
-    setSliderWidth(event.nativeEvent.layout.width);
+    const width = event.nativeEvent.layout.width;
+    if (width > 0 && sliderWidthRef.current !== width) {
+      sliderWidthRef.current = width;
+      // Calculate initial thumb position based on selectedLimit
+      const thumbRadius = 14;
+      const ratio =
+        (selectedLimit - MIN_LIMIT_SECONDS) /
+        (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
+      const initialX = thumbRadius + ratio * (width - thumbRadius * 2);
+      thumbPosition.setValue(initialX);
+    }
   };
 
   if (showConfirm) {
@@ -201,25 +252,33 @@ export function CreateContractScreen(): React.JSX.Element {
             </Text>
           </View>
           <View
-            style={styles.sliderTrack}
+            style={styles.sliderContainer}
             onLayout={handleSliderLayout}
-            onStartShouldSetResponder={() => true}
-            onMoveShouldSetResponder={() => true}
-            onResponderGrant={event =>
-              updateLimitBySliderPosition(event.nativeEvent.locationX)
-            }
-            onResponderMove={event =>
-              updateLimitBySliderPosition(event.nativeEvent.locationX)
-            }
+            {...panResponder.panHandlers}
           >
-            <View style={[styles.sliderProgress, { width: thumbLeft }]} />
-            <View style={[styles.sliderThumb, { left: thumbLeft - 12 }]} />
+            <View style={styles.sliderTrack} pointerEvents="none">
+              <View
+                style={[
+                  styles.sliderProgress,
+                  { width: `${limitRatio * 100}%` },
+                ]}
+              />
+            </View>
+            <Animated.View
+              style={[
+                styles.sliderThumb,
+                {
+                  transform: [{ translateX: thumbPosition }],
+                },
+              ]}
+              pointerEvents="none"
+            />
           </View>
           <View style={styles.sliderLabels}>
             <Text style={styles.sliderLabel}>
               {formatSeconds(MIN_LIMIT_SECONDS)}
             </Text>
-            <Text style={styles.sliderStepText}>15分刻みで調整</Text>
+            <Text style={styles.sliderStepText}>5分刻みで調整</Text>
             <Text style={styles.sliderLabel}>
               {formatSeconds(MAX_LIMIT_SECONDS)}
             </Text>
@@ -331,36 +390,42 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
   },
   limitValue: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
+    fontSize: 24,
+    fontWeight: '700',
+    color: colors.primary,
+  },
+  sliderContainer: {
+    height: 64,
+    justifyContent: 'center',
   },
   sliderTrack: {
-    height: 36,
-    borderRadius: borderRadius.md,
+    height: 8,
+    borderRadius: 4,
     backgroundColor: colors.surfaceAlt,
-    justifyContent: 'center',
     overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginBottom: spacing.sm,
   },
   sliderProgress: {
     height: '100%',
     backgroundColor: colors.primary,
+    borderRadius: 4,
   },
   sliderThumb: {
     position: 'absolute',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     backgroundColor: colors.surface,
     borderWidth: 3,
     borderColor: colors.primary,
-    marginLeft: -12,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 4,
+    marginLeft: -14,
   },
   sliderLabels: {
     flexDirection: 'row',
