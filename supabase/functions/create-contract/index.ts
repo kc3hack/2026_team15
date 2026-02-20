@@ -1,6 +1,14 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4"
 
+// Set timezone to JST
+Deno.env.set("TZ", "Asia/Tokyo")
+
+// Get local date string in JST (YYYY-MM-DD)
+function getJSTLocalDate(date: Date): string {
+  return date.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -162,7 +170,7 @@ Deno.serve(async (req) => {
         contract_id: contract.id,
         type: "deposit",
         amount: depositTotal,
-        local_date: now.toISOString().split("T")[0],
+        local_date: getJSTLocalDate(now),
         note: "initial deposit",
       })
 
