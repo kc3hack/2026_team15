@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -31,16 +31,21 @@ export function PermissionScreen(): React.JSX.Element {
   const [isGranting, setIsGranting] = useState(false);
   const [granted, setGranted] = useState(false);
 
+  useEffect(() => {
+    void (async () => {
+      try {
+        const grantedNotification = await requestNotificationPermission();
+        if (!grantedNotification) {
+          console.warn('Notification permission denied or unavailable');
+        }
+      } catch (error) {
+        console.warn('Failed to request notification permission:', error);
+      }
+    })();
+  }, []);
+
   const handleGrant = async () => {
     setIsGranting(true);
-    try {
-      const granted = await requestNotificationPermission();
-      if (!granted) {
-        console.warn('Notification permission denied or unavailable');
-      }
-    } catch (error) {
-      console.warn('Failed to request notification permission:', error);
-    }
     await new Promise<void>(resolve => setTimeout(resolve, 1200));
     setGranted(true);
     setIsGranting(false);
