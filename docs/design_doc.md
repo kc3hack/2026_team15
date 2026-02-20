@@ -78,7 +78,9 @@
 2. Permission
 3. Pick Apps
 4. Create Contract
-5. **Dashboard（Home + Summary 統合）**
+5. Payment
+6. Confirm Contract
+7. **Dashboard（Home + Summary 統合）**
 
 ※ WeeklySummary は独立画面にしない
 
@@ -119,16 +121,16 @@
 ### 入力
 
 - 日次上限時間（秒）
-- 固定ペナルティ 500 円/日
+- 日次ペナルティ（500〜2000 円、100 円刻み）
 
 ### 表示
 
-- デポジット総額（500 × 7 = 3500）
+- デポジット総額（選択した日次ペナルティ × 7）
 
 ### 処理
 
 1. contracts insert
-2. ledger_entries に deposit +3500
+2. ledger_entries に deposit +(日次ペナルティ × 7)
 3. `startMonitoring()` 呼び出し
 4. Dashboard へ遷移
 
@@ -200,8 +202,8 @@ Dashboard は状態によって UI を切替。
 | start_at            | timestamptz |                           |
 | end_at              | timestamptz |                           |
 | daily_limit_seconds | int         |                           |
-| penalty_per_day     | int         | 500                       |
-| deposit_total       | int         | 3500                      |
+| penalty_per_day     | int         | 500〜2000（100刻み）      |
+| deposit_total       | int         | penalty_per_day × 7       |
 | status              | text        | active/completed/canceled |
 | selected_apps       | jsonb       | bundle ids                |
 | selected_categories | jsonb       | nullable                  |
@@ -275,7 +277,7 @@ RN：
 
 1. `record-violation` Edge Function 呼び出し
 2. violations upsert
-3. ledger -500
+3. ledger -penalty_per_day
 4. Dashboard 再取得
 
 ---

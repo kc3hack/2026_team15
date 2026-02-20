@@ -15,8 +15,8 @@
 .
 ├── mobile/                         # React Native アプリ
 │   ├── src/
-│   │   ├── navigation/             # 5画面遷移スケルトン
-│   │   ├── screens/                # Login/Permission/PickApps/CreateContract/Dashboard
+│   │   ├── navigation/             # 7画面遷移スケルトン
+│   │   ├── screens/                # Login/Permission/PickApps/CreateContract/Payment/ConfirmContract/Dashboard
 │   │   ├── native/                 # Screen Time Bridge 呼び出し口
 │   │   ├── lib/                    # Supabase client
 │   │   └── config/                 # 環境変数ローダ
@@ -140,6 +140,11 @@ npm run mobile:ios
 4. モック状態管理の永続化（必要なら AsyncStorage）
 
 Screen Time API は現行 MVP ではモック運用です。将来ネイティブ連携を再開する場合は `docs/ios-capabilities.md` を参照してください。
+
+契約作成フローの金額仕様:
+
+- 日次ペナルティは `500〜2000` 円を `100` 円刻みで選択
+- デポジット総額は常に `日次ペナルティ × 7`
 
 ## 7. CI / CD
 
