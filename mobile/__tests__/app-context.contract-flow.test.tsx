@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import ReactTestRenderer from 'react-test-renderer';
 import { AppProvider, useApp } from '../src/lib/app-context';
 import { MOCK_APP_CATALOG, mockStore } from '../src/lib/mock-store';
-import { notifyIfThresholdReached } from '../src/lib/usage-warning-notifier';
 
 jest.mock('../src/lib/usage-warning-notifier', () => ({
   requestPermission: jest.fn().mockResolvedValue(true),
@@ -85,61 +84,38 @@ jest.mock('../src/lib/supabase', () => ({
         };
       }
 
-      if (table === 'violations') {
-        return {
-          select: jest.fn(() => createOrderBuilder({ data: [], error: null })),
-        };
-      }
-
-      if (table === 'ledger_entries') {
-        return {
-          select: jest.fn(() => createOrderBuilder({ data: [], error: null })),
-        };
-      }
-
       return {
-        select: jest.fn(() =>
-          createMaybeSingleBuilder({ data: null, error: null }),
-        ),
+        select: jest.fn(() => createOrderBuilder({ data: [], error: null })),
       };
     }),
   },
 }));
 
-function UsageSimulationHarness() {
+type HarnessProps = {
+  onCreated: (ok: boolean) => void;
+};
+
+function ContractCreationHarness({ onCreated }: HarnessProps) {
   const {
     profile,
-    grantPermission,
     selectedApps,
+    grantPermission,
     setSelectedApps,
     createContract,
-    simulateUsage,
   } = useApp();
-  const didSelectRef = useRef(false);
-  const didSimulateRef = useRef(false);
+  const startedRef = useRef(false);
 
   useEffect(() => {
-    if (!profile || didSelectRef.current) {
-      return;
-    }
-    didSelectRef.current = true;
-
-    const app = MOCK_APP_CATALOG[0];
+    if (!profile || startedRef.current) return;
+    startedRef.current = true;
     grantPermission();
-    setSelectedApps([app]);
+    setSelectedApps([MOCK_APP_CATALOG[0]]);
   }, [profile, grantPermission, setSelectedApps]);
 
   useEffect(() => {
-    if (!profile || selectedApps.length === 0 || didSimulateRef.current) {
-      return;
-    }
-    didSimulateRef.current = true;
-
-    const app = selectedApps[0];
-    void createContract(3600).then(() => {
-      simulateUsage(app.bundleId, 1800);
-    });
-  }, [profile, selectedApps, setSelectedApps, createContract, simulateUsage]);
+    if (!profile || selectedApps.length === 0) return;
+    void createContract(5400).then(onCreated);
+  }, [createContract, onCreated, profile, selectedApps]);
 
   return null;
 }
@@ -148,7 +124,7 @@ async function flush(): Promise<void> {
   await new Promise<void>(resolve => setTimeout(resolve, 0));
 }
 
-describe('AppContext notifications', () => {
+describe('AppContext contract flow', () => {
   beforeEach(() => {
     mockStore.logout();
     jest.clearAllMocks();
@@ -159,7 +135,7 @@ describe('AppContext notifications', () => {
           id: 'contract-1',
           startAt: '2026-02-20T00:00:00.000Z',
           endAt: '2026-02-27T00:00:00.000Z',
-          dailyLimitSeconds: 3600,
+          dailyLimitSeconds: 5400,
           depositTotal: 3500,
           status: 'active',
           selectedApps: [MOCK_APP_CATALOG[0]],
@@ -168,11 +144,13 @@ describe('AppContext notifications', () => {
     }) as unknown as typeof fetch;
   });
 
-  it('calls notifier from simulateUsage flow', async () => {
+  it('sends mock date fields when creating contract', async () => {
+    const onCreated = jest.fn();
+
     await ReactTestRenderer.act(async () => {
       ReactTestRenderer.create(
         <AppProvider>
-          <UsageSimulationHarness />
+          <ContractCreationHarness onCreated={onCreated} />
         </AppProvider>,
       );
       await flush();
@@ -180,13 +158,11 @@ describe('AppContext notifications', () => {
       await flush();
     });
 
-    expect(notifyIfThresholdReached).toHaveBeenCalledTimes(1);
-    expect(notifyIfThresholdReached).toHaveBeenCalledWith(
-      expect.objectContaining({
-        localDate: expect.any(String),
-        usageSeconds: 1800,
-        dailyLimitSeconds: 3600,
-      }),
-    );
+    expect(onCreated).toHaveBeenCalledWith(true);
+    const [, requestInit] = (globalThis.fetch as jest.Mock).mock.calls[0];
+    const body = JSON.parse(String(requestInit.body));
+    expect(body.dailyLimitSeconds).toBe(5400);
+    expect(body.clientNowIso).toEqual(expect.any(String));
+    expect(body.clientLocalDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 });

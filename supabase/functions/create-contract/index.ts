@@ -23,6 +23,19 @@ type CreateContractBody = {
     category?: string
   }>
   contractDays?: number
+  clientNowIso?: string
+  clientLocalDate?: string
+}
+
+function parseClientNow(candidate?: string): Date | null {
+  if (!candidate) return null
+  const parsed = new Date(candidate)
+  if (Number.isNaN(parsed.getTime())) return null
+  return parsed
+}
+
+function isValidLocalDate(candidate?: string): candidate is string {
+  return typeof candidate === "string" && /^\d{4}-\d{2}-\d{2}$/.test(candidate)
 }
 
 Deno.serve(async (req) => {
@@ -65,7 +78,14 @@ Deno.serve(async (req) => {
 
     const userId = authData.user.id
     const body = await req.json() as CreateContractBody
-    const { dailyLimitSeconds, depositTotal, selectedApps, contractDays = 7 } = body
+    const {
+      dailyLimitSeconds,
+      depositTotal,
+      selectedApps,
+      contractDays = 7,
+      clientNowIso,
+      clientLocalDate,
+    } = body
 
     if (!dailyLimitSeconds || dailyLimitSeconds <= 0) {
       return new Response(
@@ -74,32 +94,74 @@ Deno.serve(async (req) => {
       )
     }
 
+    const baseNow = parseClientNow(clientNowIso) ?? new Date()
+    const baseLocalDate = isValidLocalDate(clientLocalDate)
+      ? clientLocalDate
+      : getJSTLocalDate(baseNow)
+
     // Use service role for database operations
     const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
 
-    // Check for existing active contract
-    const { data: existingContract } = await adminClient
+    // Check for existing active contract (only one by unique index)
+    const { data: existingContract, error: existingContractError } = await adminClient
       .from("contracts")
       .select("*")
       .eq("user_id", userId)
       .eq("status", "active")
       .maybeSingle()
 
-    if (existingContract) {
+    if (existingContractError) {
+      return new Response(
+        JSON.stringify({ error: "failed_to_load_existing_contract", details: existingContractError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
+    if (existingContract && new Date(existingContract.end_at) <= baseNow) {
+      const { error: completeError } = await adminClient
+        .from("contracts")
+        .update({ status: "completed" })
+        .eq("id", existingContract.id)
+        .eq("user_id", userId)
+        .eq("status", "active")
+
+      if (completeError) {
+        return new Response(
+          JSON.stringify({ error: "failed_to_complete_expired_contract", details: completeError.message }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        )
+      }
+    }
+
+    const { data: activeContract, error: activeContractError } = await adminClient
+      .from("contracts")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("status", "active")
+      .maybeSingle()
+
+    if (activeContractError) {
+      return new Response(
+        JSON.stringify({ error: "failed_to_recheck_active_contract", details: activeContractError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
+    if (activeContract) {
       // Return existing contract instead of creating a new one
       return new Response(
         JSON.stringify({
           success: true,
           contract: {
-            id: existingContract.id,
-            startAt: existingContract.start_at,
-            endAt: existingContract.end_at,
-            dailyLimitSeconds: existingContract.daily_limit_seconds,
-            depositTotal: existingContract.deposit_total,
-            selectedApps: existingContract.selected_apps,
-            status: existingContract.status,
+            id: activeContract.id,
+            startAt: activeContract.start_at,
+            endAt: activeContract.end_at,
+            dailyLimitSeconds: activeContract.daily_limit_seconds,
+            depositTotal: activeContract.deposit_total,
+            selectedApps: activeContract.selected_apps,
+            status: activeContract.status,
           },
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -107,19 +169,19 @@ Deno.serve(async (req) => {
     }
 
     // Calculate contract dates
-    const now = new Date()
-    const endAt = new Date(now)
+    const now = baseNow
+    const endAt = new Date(baseNow)
     endAt.setDate(endAt.getDate() + contractDays)
 
     // Create contract
     const { data: contract, error: contractError } = await adminClient
-      .from("contracts")
-      .insert({
-        user_id: userId,
-        start_at: now.toISOString(),
-        end_at: endAt.toISOString(),
-        daily_limit_seconds: dailyLimitSeconds,
-        deposit_total: depositTotal,
+        .from("contracts")
+        .insert({
+          user_id: userId,
+          start_at: baseNow.toISOString(),
+          end_at: endAt.toISOString(),
+          daily_limit_seconds: dailyLimitSeconds,
+          deposit_total: depositTotal,
         selected_apps: selectedApps,
         status: "active",
       })
@@ -170,7 +232,7 @@ Deno.serve(async (req) => {
         contract_id: contract.id,
         type: "deposit",
         amount: depositTotal,
-        local_date: getJSTLocalDate(now),
+        local_date: baseLocalDate,
         note: "initial deposit",
       })
 

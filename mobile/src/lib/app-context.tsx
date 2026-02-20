@@ -41,7 +41,7 @@ interface AppContextType {
     dailyLimitSeconds: number;
     depositTotal: number;
   }) => void;
-  createContract: (dailyLimitSeconds: number) => Promise<void>;
+  createContract: (dailyLimitSeconds: number) => Promise<boolean>;
   activeContract: Contract | null;
   refreshContract: () => void;
   simulateUsage: (bundleId: string, seconds: number) => void;
@@ -51,6 +51,34 @@ interface AppContextType {
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
+
+type ContractRow = {
+  id: string;
+  user_id: string;
+  start_at: string;
+  end_at: string;
+  daily_limit_seconds: number;
+  penalty_per_day: number;
+  deposit_total: number;
+  status: Contract['status'];
+  selected_apps: AppInfo[];
+  selected_categories: string[] | null;
+};
+
+function toContractFromRow(row: ContractRow): Contract {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    startAt: row.start_at,
+    endAt: row.end_at,
+    dailyLimitSeconds: row.daily_limit_seconds,
+    penaltyPerDay: row.penalty_per_day,
+    depositTotal: row.deposit_total,
+    status: row.status,
+    selectedApps: row.selected_apps ?? [],
+    selectedCategories: row.selected_categories ?? null,
+  };
+}
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState<AppStep>('login');
@@ -67,7 +95,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setRefreshKey] = useState(0);
 
-  const syncStepFromMockState = useCallback(() => {
+  const syncStepFromMockState = useCallback(async (userId?: string) => {
     // Check if there's already an active contract
     const existing = mockStore.getActiveContract();
     if (existing) {
@@ -75,18 +103,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
       setHasPermission(true);
       setSelectedAppsState(existing.selectedApps);
       setStep('dashboard');
-    } else if (mockStore.hasScreenTimePermission()) {
+      return;
+    }
+
+    if (userId) {
+      const { data: activeRow, error: activeContractError } = await supabase
+        .from('contracts')
+        .select(
+          'id, user_id, start_at, end_at, daily_limit_seconds, penalty_per_day, deposit_total, status, selected_apps, selected_categories',
+        )
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (!activeContractError && activeRow) {
+        const dbActiveContract = toContractFromRow(activeRow);
+        mockStore.setContractFromDB(dbActiveContract);
+        setActiveContract(dbActiveContract);
+        setHasPermission(true);
+        setSelectedAppsState(dbActiveContract.selectedApps);
+        setStep('dashboard');
+        return;
+      }
+    }
+
+    if (mockStore.hasScreenTimePermission()) {
       setHasPermission(true);
       const apps = mockStore.getSelectedApps();
       if (apps.length > 0) {
         setSelectedAppsState(apps);
         setStep('create-contract');
-      } else {
-        setStep('pick-apps');
+        return;
       }
-    } else {
-      setStep('permission');
+      setStep('pick-apps');
+      return;
     }
+
+    setStep('permission');
   }, []);
 
   const ensureAuthenticatedProfile = useCallback(async (): Promise<Profile> => {
@@ -156,7 +209,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const authenticatedProfile = await ensureAuthenticatedProfile();
       setProfile(authenticatedProfile);
       mockStore.login(authenticatedProfile.id);
-      syncStepFromMockState();
+      await syncStepFromMockState(authenticatedProfile.id);
     } finally {
       setIsAuthInitializing(false);
     }
@@ -200,21 +253,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
     async (dailyLimitSeconds: number) => {
       if (selectedApps.length === 0) {
         console.error('[createContract] No selected apps');
-        return;
+        return false;
       }
 
       // Calculate deposit total (500 yen/day * 7 days)
       const depositTotal = 500 * 7;
 
       try {
+        await ensureAuthenticatedProfile();
         const {
           data: { session },
         } = await supabase.auth.getSession();
         if (!session) {
           console.error('[createContract] No session');
-          return;
+          return false;
         }
 
+        const clientNowIso = mockStore.getMockNowIso();
+        const clientLocalDate = mockStore.getMockLocalDate();
         const response = await fetch(
           `${env.supabaseUrl}/functions/v1/create-contract`,
           {
@@ -232,6 +288,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 category: app.category,
               })),
               contractDays: 7,
+              clientNowIso,
+              clientLocalDate,
             }),
           },
         );
@@ -239,7 +297,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!response.ok) {
           const errorData = await response.json();
           console.error('[createContract] Error:', errorData);
-          return;
+          return false;
         }
 
         const { contract } = await response.json();
@@ -260,16 +318,69 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Also save to mockStore for compatibility with existing dashboard logic
         mockStore.setContractFromDB(newContract);
+        const [violationsRes, ledgerRes] = await Promise.all([
+          supabase
+            .from('violations')
+            .select(
+              'id, contract_id, user_id, date, exceeded_at, penalty_amount, created_at',
+            )
+            .eq('contract_id', newContract.id)
+            .order('date', { ascending: false }),
+          supabase
+            .from('ledger_entries')
+            .select(
+              'id, user_id, contract_id, type, amount, local_date, note, created_at',
+            )
+            .eq('contract_id', newContract.id)
+            .order('created_at', { ascending: true }),
+        ]);
 
-        setActiveContract(newContract);
+        if (violationsRes.error) {
+          throw violationsRes.error;
+        }
+        if (ledgerRes.error) {
+          throw ledgerRes.error;
+        }
+
+        const violations = (violationsRes.data ?? []).map(row => ({
+          id: row.id,
+          contractId: row.contract_id,
+          userId: row.user_id,
+          date: row.date,
+          exceededAt: row.exceeded_at,
+          penaltyAmount: row.penalty_amount,
+        }));
+        const ledgerEntries = (ledgerRes.data ?? []).map(row => ({
+          id: row.id,
+          userId: row.user_id,
+          contractId: row.contract_id,
+          type: row.type,
+          amount: row.amount,
+          localDate: row.local_date,
+          note: row.note ?? '',
+          createdAt: row.created_at,
+        }));
+
+        mockStore.replaceViolationsForContract(newContract.id, violations);
+        mockStore.replaceLedgerEntriesForContract(
+          newContract.id,
+          ledgerEntries,
+        );
+        mockStore.syncShieldState(newContract.id);
+        mockStore.checkContractExpiry();
+
+        setActiveContract(mockStore.getActiveContract());
+        setRefreshKey(k => k + 1);
         setPaymentCompleted(false);
         setPendingContractData(null);
         setStep('dashboard');
+        return true;
       } catch (error) {
         console.error('[createContract] Error:', error);
+        return false;
       }
     },
-    [selectedApps, profile?.id],
+    [ensureAuthenticatedProfile, selectedApps, profile?.id],
   );
 
   const refreshContract = useCallback(() => {
