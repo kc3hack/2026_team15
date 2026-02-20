@@ -98,7 +98,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     let session = sessionData.session;
     if (session) {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const { data: userData, error: userError } =
+        await supabase.auth.getUser();
       if (userError || !userData.user) {
         // Stored session can be stale after project/key changes; recreate it.
         await supabase.auth.signOut();
