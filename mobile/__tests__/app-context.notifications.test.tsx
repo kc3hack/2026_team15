@@ -14,7 +14,16 @@ jest.mock('../src/lib/supabase', () => ({
     auth: {
       getSession: jest
         .fn()
-        .mockResolvedValue({ data: { session: null }, error: null }),
+        .mockResolvedValueOnce({ data: { session: null }, error: null })
+        .mockResolvedValue({
+          data: {
+            session: {
+              access_token: 'test-access-token',
+              user: { id: 'test-user-id' },
+            },
+          },
+          error: null,
+        }),
       signInAnonymously: jest.fn().mockResolvedValue({
         data: { session: { user: { id: 'test-user-id' } } },
         error: null,
@@ -45,30 +54,36 @@ function UsageSimulationHarness() {
   const {
     profile,
     grantPermission,
+    selectedApps,
     setSelectedApps,
     createContract,
     simulateUsage,
   } = useApp();
-  const didRunRef = useRef(false);
+  const didSelectRef = useRef(false);
+  const didSimulateRef = useRef(false);
 
   useEffect(() => {
-    if (!profile || didRunRef.current) {
+    if (!profile || didSelectRef.current) {
       return;
     }
-    didRunRef.current = true;
+    didSelectRef.current = true;
 
     const app = MOCK_APP_CATALOG[0];
     grantPermission();
     setSelectedApps([app]);
-    createContract(3600);
-    simulateUsage(app.bundleId, 1800);
-  }, [
-    profile,
-    grantPermission,
-    setSelectedApps,
-    createContract,
-    simulateUsage,
-  ]);
+  }, [profile, grantPermission, setSelectedApps]);
+
+  useEffect(() => {
+    if (!profile || selectedApps.length === 0 || didSimulateRef.current) {
+      return;
+    }
+    didSimulateRef.current = true;
+
+    const app = selectedApps[0];
+    void createContract(3600).then(() => {
+      simulateUsage(app.bundleId, 1800);
+    });
+  }, [profile, selectedApps, setSelectedApps, createContract, simulateUsage]);
 
   return null;
 }
@@ -81,6 +96,20 @@ describe('AppContext notifications', () => {
   beforeEach(() => {
     mockStore.logout();
     jest.clearAllMocks();
+    globalThis.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      json: jest.fn().mockResolvedValue({
+        contract: {
+          id: 'contract-1',
+          startAt: '2026-02-20T00:00:00.000Z',
+          endAt: '2026-02-27T00:00:00.000Z',
+          dailyLimitSeconds: 3600,
+          depositTotal: 3500,
+          status: 'active',
+          selectedApps: [MOCK_APP_CATALOG[0]],
+        },
+      }),
+    }) as unknown as typeof fetch;
   });
 
   it('calls notifier from simulateUsage flow', async () => {
