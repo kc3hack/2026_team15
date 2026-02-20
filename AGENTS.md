@@ -25,10 +25,12 @@ This document defines mandatory workflow rules for AI agents working in this rep
 3. Follow `.github/PULL_REQUEST_TEMPLATE.md` when creating a PR.
 4. In the PR body, always include the related issue reference (for example: `Closes #27`).
 5. Before pushing, run the same mobile checks as CI and confirm they pass locally:
-   - `npm run mobile:format:check`
-   - `npm run mobile:lint`
-   - `npm run mobile:typecheck`
-   - `npm run mobile:test`
+   - Preferred: `npm run mobile:ci`
+   - Equivalent individual commands:
+     - `npm run mobile:format:check`
+     - `npm run mobile:lint`
+     - `npm run mobile:typecheck`
+     - `npm run mobile:test`
 
 ## Change Safety Rules
 
