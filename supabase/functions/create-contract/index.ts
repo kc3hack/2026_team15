@@ -1,9 +1,6 @@
 import "@supabase/functions-js/edge-runtime.d.ts"
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4"
 
-// Set timezone to JST
-Deno.env.set("TZ", "Asia/Tokyo")
-
 // Get local date string in JST (YYYY-MM-DD)
 function getJSTLocalDate(date: Date): string {
   return date.toLocaleDateString("sv-SE", { timeZone: "Asia/Tokyo" })
