@@ -7,12 +7,18 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8CE491482F48D15E003CEFE2 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE491462F48D15E003CEFE2 /* MainView.swift */; };
+		8CE491492F48D15E003CEFE2 /* LockManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE491452F48D15E003CEFE2 /* LockManager.swift */; };
+		8CE4914A2F48D15E003CEFE2 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CE491472F48D15E003CEFE2 /* SettingsView.swift */; };
 		A11111110000000000000001 /* LockAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12222220000000000000001 /* LockAppApp.swift */; };
 		A11111110000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12222220000000000000002 /* ContentView.swift */; };
 		A11111110000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A12222220000000000000004 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8CE491452F48D15E003CEFE2 /* LockManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockManager.swift; sourceTree = "<group>"; };
+		8CE491462F48D15E003CEFE2 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
+		8CE491472F48D15E003CEFE2 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A12222220000000000000001 /* LockAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockAppApp.swift; sourceTree = "<group>"; };
 		A12222220000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A12222220000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -42,6 +48,9 @@
 		A15555550000000000000002 /* LockApp */ = {
 			isa = PBXGroup;
 			children = (
+				8CE491452F48D15E003CEFE2 /* LockManager.swift */,
+				8CE491462F48D15E003CEFE2 /* MainView.swift */,
+				8CE491472F48D15E003CEFE2 /* SettingsView.swift */,
 				A12222220000000000000001 /* LockAppApp.swift */,
 				A12222220000000000000002 /* ContentView.swift */,
 				A12222220000000000000003 /* Info.plist */,
@@ -127,6 +136,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8CE491482F48D15E003CEFE2 /* MainView.swift in Sources */,
+				8CE491492F48D15E003CEFE2 /* LockManager.swift in Sources */,
+				8CE4914A2F48D15E003CEFE2 /* SettingsView.swift in Sources */,
 				A11111110000000000000001 /* LockAppApp.swift in Sources */,
 				A11111110000000000000002 /* ContentView.swift in Sources */,
 			);
@@ -261,14 +273,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 6MZBUNDJGM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LockApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Lock App";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -276,7 +288,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yohaku.lockapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yohakuyoafjalkfjsf.lockapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -291,14 +303,14 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 6MZBUNDJGM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = LockApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Lock App";
-				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIRequiredDeviceCapabilities = arm64;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -306,7 +318,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.yohaku.lockapp;
+				PRODUCT_BUNDLE_IDENTIFIER = com.yohakuyoafjalkfjsf.lockapp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
