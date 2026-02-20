@@ -47,6 +47,9 @@ export function PickAppsScreen(): React.JSX.Element {
       >
         {/* Header */}
         <View style={styles.header}>
+          <View style={styles.stepBadge}>
+            <Text style={styles.stepBadgeText}>STEP 2 / 3</Text>
+          </View>
           <Text style={styles.title}>制限するアプリを選択</Text>
           <Text style={styles.description}>
             使用時間を制限したいアプリを選んでください。
@@ -136,6 +139,20 @@ const styles = StyleSheet.create({
   },
   header: {
     marginBottom: spacing.xl,
+  },
+  stepBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    letterSpacing: 0.6,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   title: {
     fontSize: 22,

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -9,6 +9,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useApp } from '../lib/app-context';
 import { colors, spacing, borderRadius } from '../lib/theme';
+import { requestPermission as requestNotificationPermission } from '../lib/usage-warning-notifier';
 
 function PermissionItem({
   label,
@@ -30,6 +31,19 @@ export function PermissionScreen(): React.JSX.Element {
   const [isGranting, setIsGranting] = useState(false);
   const [granted, setGranted] = useState(false);
 
+  useEffect(() => {
+    void (async () => {
+      try {
+        const grantedNotification = await requestNotificationPermission();
+        if (!grantedNotification) {
+          console.warn('Notification permission denied or unavailable');
+        }
+      } catch (error) {
+        console.warn('Failed to request notification permission:', error);
+      }
+    })();
+  }, []);
+
   const handleGrant = async () => {
     setIsGranting(true);
     await new Promise<void>(resolve => setTimeout(resolve, 1200));
@@ -43,13 +57,14 @@ export function PermissionScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        {/* Icon */}
         <View style={styles.iconContainer}>
           <Text style={styles.iconText}>{granted ? '✓' : '◯'}</Text>
         </View>
 
-        {/* Text */}
         <View style={styles.textContainer}>
+          <View style={styles.stepBadge}>
+            <Text style={styles.stepBadgeText}>STEP 1 / 3</Text>
+          </View>
           <Text style={styles.title}>Screen Time 許可</Text>
           <Text style={styles.description}>
             アプリの使用時間を監視し、制限を適用するために{'\n'}
@@ -57,7 +72,6 @@ export function PermissionScreen(): React.JSX.Element {
           </Text>
         </View>
 
-        {/* Permission details */}
         <View style={styles.permissionsCard}>
           <PermissionItem
             label="使用時間の読み取り"
@@ -75,7 +89,6 @@ export function PermissionScreen(): React.JSX.Element {
           />
         </View>
 
-        {/* Action */}
         <View style={styles.actionContainer}>
           <TouchableOpacity
             style={[
@@ -100,6 +113,11 @@ export function PermissionScreen(): React.JSX.Element {
               <Text style={styles.buttonText}>許可する</Text>
             )}
           </TouchableOpacity>
+          <View style={styles.helperCard}>
+            <Text style={styles.helperCardText}>
+              許可後に制限対象アプリの選択画面へ進みます
+            </Text>
+          </View>
           <Text style={styles.disclaimer}>MVP: モックで許可をシミュレート</Text>
         </View>
       </View>
@@ -136,6 +154,21 @@ const styles = StyleSheet.create({
   textContainer: {
     alignItems: 'center',
     marginBottom: 32,
+    width: '100%',
+  },
+  stepBadge: {
+    alignSelf: 'center',
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.md,
+  },
+  stepBadgeText: {
+    fontSize: 11,
+    letterSpacing: 0.6,
+    fontWeight: '600',
+    color: colors.textSecondary,
   },
   title: {
     fontSize: 22,
@@ -180,6 +213,20 @@ const styles = StyleSheet.create({
   actionContainer: {
     width: '100%',
     alignItems: 'center',
+  },
+  helperCard: {
+    width: '100%',
+    marginTop: spacing.md,
+    padding: spacing.md,
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.md,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  helperCardText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
   },
   button: {
     width: '100%',

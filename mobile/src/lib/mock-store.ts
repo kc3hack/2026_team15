@@ -101,6 +101,19 @@ export function getLocalDate(): string {
   return `${year}-${month}-${day}`;
 }
 
+function formatLocalDate(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function addDays(baseDate: Date, days: number): Date {
+  const date = new Date(baseDate);
+  date.setDate(date.getDate() + days);
+  return date;
+}
+
 // Format seconds to human readable
 export function formatSeconds(seconds: number): string {
   const hours = Math.floor(seconds / 3600);
@@ -122,6 +135,25 @@ class MockStore {
   private mockUsage: MockScreenTimeUsage[] = [];
   private monitoringActive: boolean = false;
   private shieldActive: boolean = false;
+  private mockDayOffset: number = 0;
+
+  private getMockNow(): Date {
+    return addDays(new Date(), this.mockDayOffset);
+  }
+
+  private getCurrentLocalDate(): string {
+    return formatLocalDate(this.getMockNow());
+  }
+
+  getMockLocalDate(): string {
+    return this.getCurrentLocalDate();
+  }
+
+  advanceToNextDay(): string {
+    this.mockDayOffset += 1;
+    this.shieldActive = false;
+    return this.getCurrentLocalDate();
+  }
 
   // Auth
   login(appleUserId: string): Profile {
@@ -154,6 +186,7 @@ class MockStore {
     this.mockUsage = [];
     this.monitoringActive = false;
     this.shieldActive = false;
+    this.mockDayOffset = 0;
   }
 
   // Screen Time Permission (mock)
@@ -190,7 +223,7 @@ class MockStore {
     if (existing) throw new Error('Active contract already exists');
     if (!this.profile) throw new Error('Not logged in');
 
-    const now = new Date();
+    const now = this.getMockNow();
     const endAt = new Date(now);
     endAt.setDate(endAt.getDate() + 7);
 
@@ -219,13 +252,22 @@ class MockStore {
       contractId: contract.id,
       type: 'deposit',
       amount: depositTotal,
-      localDate: getLocalDate(),
+      localDate: this.getCurrentLocalDate(),
       note: 'Contract deposit',
       createdAt: new Date().toISOString(),
     });
 
     this.monitoringActive = true;
     return contract;
+  }
+
+  // Set contract from DB (for syncing with Supabase)
+  setContractFromDB(contract: Contract): void {
+    // Remove any existing contract with the same id
+    this.contracts = this.contracts.filter(c => c.id !== contract.id);
+    // Add the contract from DB
+    this.contracts.push(contract);
+    this.monitoringActive = contract.status === 'active';
   }
 
   completeContract(contractId: string): void {
@@ -244,7 +286,7 @@ class MockStore {
           contractId,
           type: 'refund_mock',
           amount: 0, // just a marker, balance is calculated from sum
-          localDate: getLocalDate(),
+          localDate: this.getCurrentLocalDate(),
           note: 'Contract completed - mock refund',
           createdAt: new Date().toISOString(),
         });
@@ -254,7 +296,7 @@ class MockStore {
 
   // Violations
   recordViolation(contractId: string): Violation | null {
-    const today = getLocalDate();
+    const today = this.getCurrentLocalDate();
     const existing = this.violations.find(
       v => v.contractId === contractId && v.date === today,
     );
@@ -306,7 +348,7 @@ class MockStore {
   }
 
   getTodayViolation(contractId: string): Violation | null {
-    const today = getLocalDate();
+    const today = this.getCurrentLocalDate();
     return (
       this.violations.find(
         v => v.contractId === contractId && v.date === today,
@@ -337,7 +379,7 @@ class MockStore {
 
   // Mock Screen Time
   simulateUsage(appBundleId: string, additionalSeconds: number): void {
-    const today = getLocalDate();
+    const today = this.getCurrentLocalDate();
     const existing = this.mockUsage.find(
       u => u.appBundleId === appBundleId && u.date === today,
     );
@@ -353,7 +395,7 @@ class MockStore {
   }
 
   getTodayTotalUsage(): number {
-    const today = getLocalDate();
+    const today = this.getCurrentLocalDate();
     const contract = this.getActiveContract();
     if (!contract) return 0;
 
@@ -366,7 +408,7 @@ class MockStore {
   }
 
   getAppUsageToday(): MockScreenTimeUsage[] {
-    const today = getLocalDate();
+    const today = this.getCurrentLocalDate();
     return this.mockUsage.filter(u => u.date === today);
   }
 
@@ -389,7 +431,7 @@ class MockStore {
   // Check if contract has expired
   checkContractExpiry(): void {
     const contract = this.getActiveContract();
-    if (contract && new Date() >= new Date(contract.endAt)) {
+    if (contract && this.getMockNow() >= new Date(contract.endAt)) {
       this.completeContract(contract.id);
     }
   }
@@ -398,7 +440,7 @@ class MockStore {
   getDaysRemaining(): number {
     const contract = this.getActiveContract();
     if (!contract) return 0;
-    const now = new Date();
+    const now = this.getMockNow();
     const end = new Date(contract.endAt);
     const diff = end.getTime() - now.getTime();
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));

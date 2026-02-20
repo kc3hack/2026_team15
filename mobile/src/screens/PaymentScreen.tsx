@@ -4,111 +4,123 @@ import {
   Text,
   View,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  CardField,
+  useStripe,
+  CardFieldInput,
+} from '@stripe/stripe-react-native';
 import { useApp } from '../lib/app-context';
+import { supabase } from '../lib/supabase';
+import { env } from '../config/env';
 import { colors, spacing, borderRadius } from '../lib/theme';
 
 const PENALTY_PER_DAY = 500;
 const CONTRACT_DAYS = 7;
 const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
+const QUICK_FILL_TEST_CARD = {
+  number: '4242 4242 4242 4242',
+  expiry: '12/34',
+  cvc: '123',
+};
 
 export function PaymentScreen(): React.JSX.Element {
   const { setPaymentCompleted, setStep } = useApp();
-  const [cardNumber, setCardNumber] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [cvc, setCvc] = useState('');
-  const [cardholderName, setCardholderName] = useState('');
+  const { confirmPayment } = useStripe();
+  const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(
+    null,
+  );
+  const [isQuickFillEnabled, setIsQuickFillEnabled] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [error, setError] = useState<string | null>(null);
 
-  const formatCardNumber = (value: string) => {
-    const cleaned = value.replace(/\s/g, '');
-    const chunks = cleaned.match(/.{1,4}/g) || [];
-    return chunks.join(' ').substring(0, 19);
-  };
-
-  const formatExpiryDate = (value: string) => {
-    const cleaned = value.replace(/\D/g, '');
-    if (cleaned.length >= 2) {
-      return cleaned.substring(0, 2) + '/' + cleaned.substring(2, 4);
-    }
-    return cleaned;
-  };
-
-  const handleCardNumberChange = (value: string) => {
-    const formatted = formatCardNumber(value);
-    setCardNumber(formatted);
-    if (errors.cardNumber) {
-      setErrors(prev => ({ ...prev, cardNumber: '' }));
-    }
-  };
-
-  const handleExpiryChange = (value: string) => {
-    const formatted = formatExpiryDate(value);
-    setExpiryDate(formatted);
-    if (errors.expiryDate) {
-      setErrors(prev => ({ ...prev, expiryDate: '' }));
-    }
-  };
-
-  const handleCvcChange = (value: string) => {
-    const cleaned = value.replace(/\D/g, '').substring(0, 4);
-    setCvc(cleaned);
-    if (errors.cvc) {
-      setErrors(prev => ({ ...prev, cvc: '' }));
-    }
-  };
-
-  const validateForm = (): boolean => {
-    const newErrors: Record<string, string> = {};
-
-    const cardDigits = cardNumber.replace(/\s/g, '');
-    if (!cardDigits || cardDigits.length < 15) {
-      newErrors.cardNumber = 'カード番号を正しく入力してください';
-    }
-
-    if (!expiryDate || expiryDate.length < 5) {
-      newErrors.expiryDate = '有効期限を入力してください';
-    } else {
-      const [month] = expiryDate.split('/');
-      const monthNum = parseInt(month, 10);
-      if (monthNum < 1 || monthNum > 12) {
-        newErrors.expiryDate = '有効な月を入力してください';
-      }
-    }
-
-    if (!cvc || cvc.length < 3) {
-      newErrors.cvc = 'セキュリティコードを入力してください';
-    }
-
-    if (!cardholderName.trim()) {
-      newErrors.cardholderName = 'カード名義人を入力してください';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const isCardComplete = (cardDetails?.complete ?? false) || isQuickFillEnabled;
 
   const handleSubmit = async () => {
-    if (!validateForm()) {
+    if (!isCardComplete) {
+      setError('カード情報を正しく入力してください');
       return;
     }
 
     setIsProcessing(true);
-    await new Promise<void>(resolve => setTimeout(resolve, 2000));
+    setError(null);
 
-    console.log('[MVP] Mock payment processed', {
-      cardLast4: cardNumber.slice(-4),
-      amount: DEPOSIT_TOTAL,
-    });
+    try {
+      if (isQuickFillEnabled) {
+        await new Promise<void>(resolve => setTimeout(resolve, 500));
+        setPaymentCompleted(true);
+        setStep('create-contract');
+        return;
+      }
 
-    setPaymentCompleted(true);
-    setIsProcessing(false);
-    setStep('create-contract');
+      // Get the current session for auth token
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session) {
+        setError('ログインが必要です');
+        return;
+      }
+
+      // Call backend to create PaymentIntent
+      const response = await fetch(
+        `${env.supabaseUrl}/functions/v1/create-payment-intent`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            amount: DEPOSIT_TOTAL,
+            currency: 'jpy',
+          }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('[Payment] Backend error:', errorData);
+        setError(errorData.error || '決済の準備に失敗しました');
+        return;
+      }
+
+      const { clientSecret } = await response.json();
+
+      // Confirm payment with Stripe
+      const { error: confirmError, paymentIntent } = await confirmPayment(
+        clientSecret,
+        { paymentMethodType: 'Card' },
+      );
+
+      if (confirmError) {
+        console.error('[Payment] Stripe error:', confirmError);
+        setError(confirmError.message ?? '決済エラーが発生しました');
+        return;
+      }
+
+      console.log('[Payment] Success:', {
+        id: paymentIntent?.id,
+        amount: paymentIntent?.amount,
+        status: paymentIntent?.status,
+      });
+
+      setPaymentCompleted(true);
+      setStep('create-contract');
+    } catch (e) {
+      setError('決済処理中にエラーが発生しました');
+      console.error('[Payment] Error:', e);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleQuickFill = () => {
+    setIsQuickFillEnabled(true);
+    setError(null);
   };
 
   const handleBack = () => {
@@ -142,95 +154,91 @@ export function PaymentScreen(): React.JSX.Element {
           </Text>
         </View>
 
-        {/* Mock notice */}
+        {/* Test mode notice */}
         <View style={styles.notice}>
-          <Text style={styles.noticeText}>MVP: 実際の決済は行われません</Text>
+          <Text style={styles.noticeText}>
+            テストモード: 実際の請求は行われません
+          </Text>
+          <Text style={styles.noticeSubText}>
+            4242 4242 4242 4242 / 有効期限は任意 / CVCは任意
+          </Text>
+          <TouchableOpacity
+            style={styles.quickFillButton}
+            onPress={handleQuickFill}
+            disabled={isProcessing}
+          >
+            <Text style={styles.quickFillButtonText}>
+              ワンタップでテストカードを入力（デモ）
+            </Text>
+          </TouchableOpacity>
+          {isQuickFillEnabled && (
+            <View style={styles.quickFillApplied}>
+              <Text style={styles.quickFillAppliedTitle}>
+                テストカードを適用しました
+              </Text>
+              <Text style={styles.quickFillAppliedText}>
+                {QUICK_FILL_TEST_CARD.number} / {QUICK_FILL_TEST_CARD.expiry} /{' '}
+                {QUICK_FILL_TEST_CARD.cvc}
+              </Text>
+            </View>
+          )}
         </View>
 
         {/* Payment form */}
         <View style={styles.form}>
-          {/* Card Number */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>カード番号</Text>
-            <TextInput
-              style={[styles.input, errors.cardNumber && styles.inputError]}
-              value={cardNumber}
-              onChangeText={handleCardNumberChange}
-              placeholder="1234 5678 9012 3456"
-              keyboardType="numeric"
-              editable={!isProcessing}
-              maxLength={19}
-              placeholderTextColor={colors.textLight}
-            />
-            {errors.cardNumber && (
-              <Text style={styles.errorText}>{errors.cardNumber}</Text>
-            )}
-          </View>
-
-          {/* Expiry and CVC */}
-          <View style={styles.row}>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>有効期限</Text>
-              <TextInput
-                style={[styles.input, errors.expiryDate && styles.inputError]}
-                value={expiryDate}
-                onChangeText={handleExpiryChange}
-                placeholder="MM/YY"
-                keyboardType="numeric"
-                editable={!isProcessing}
-                maxLength={5}
-                placeholderTextColor={colors.textLight}
+            <Text style={styles.label}>カード情報</Text>
+            <View style={styles.cardFieldContainer}>
+              <CardField
+                postalCodeEnabled={false}
+                autofocus
+                style={styles.cardField}
+                onCardChange={cardInfo => {
+                  setCardDetails(cardInfo);
+                  if (isQuickFillEnabled) {
+                    setIsQuickFillEnabled(false);
+                  }
+                  if (error) setError(null);
+                }}
+                disabled={isProcessing}
+                cardStyle={{
+                  textColor: colors.text,
+                  fontSize: 16,
+                  placeholderColor: colors.textLight,
+                  backgroundColor: colors.surface,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                  borderRadius: borderRadius.md,
+                }}
               />
-              {errors.expiryDate && (
-                <Text style={styles.errorText}>{errors.expiryDate}</Text>
-              )}
-            </View>
-            <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={styles.label}>CVC</Text>
-              <TextInput
-                style={[styles.input, errors.cvc && styles.inputError]}
-                value={cvc}
-                onChangeText={handleCvcChange}
-                placeholder="123"
-                keyboardType="numeric"
-                editable={!isProcessing}
-                maxLength={4}
-                placeholderTextColor={colors.textLight}
-              />
-              {errors.cvc && <Text style={styles.errorText}>{errors.cvc}</Text>}
             </View>
           </View>
 
-          {/* Cardholder Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>カード名義人</Text>
-            <TextInput
-              style={[styles.input, errors.cardholderName && styles.inputError]}
-              value={cardholderName}
-              onChangeText={text => {
-                setCardholderName(text);
-                if (errors.cardholderName) {
-                  setErrors(prev => ({ ...prev, cardholderName: '' }));
-                }
-              }}
-              placeholder="TARO YAMADA"
-              autoCapitalize="characters"
-              editable={!isProcessing}
-              placeholderTextColor={colors.textLight}
-            />
-            {errors.cardholderName && (
-              <Text style={styles.errorText}>{errors.cardholderName}</Text>
-            )}
+          {/* Security note */}
+          <View style={styles.securityNote}>
+            <Text style={styles.securityNoteText}>
+              🔒 カード情報は暗号化されてStripeを通じて安全に処理されます
+            </Text>
           </View>
+
+          {/* Error message */}
+          {error && (
+            <View style={styles.errorContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
         </View>
       </ScrollView>
 
       {/* Submit button */}
       <View style={styles.footer}>
         <TouchableOpacity
-          style={[styles.button, isProcessing && styles.buttonDisabled]}
+          style={[
+            styles.button,
+            (!isCardComplete || isProcessing) && styles.buttonDisabled,
+          ]}
           onPress={handleSubmit}
-          disabled={isProcessing}
+          disabled={!isCardComplete || isProcessing}
           activeOpacity={0.7}
         >
           {isProcessing ? (
@@ -298,6 +306,42 @@ const styles = StyleSheet.create({
   noticeText: {
     fontSize: 13,
     color: colors.textSecondary,
+    marginBottom: spacing.xs,
+  },
+  noticeSubText: {
+    fontSize: 12,
+    color: colors.textMuted,
+  },
+  quickFillButton: {
+    marginTop: spacing.sm,
+    alignSelf: 'flex-start',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: borderRadius.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  quickFillButtonText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.textSecondary,
+  },
+  quickFillApplied: {
+    marginTop: spacing.sm,
+    backgroundColor: '#DCFCE7',
+    borderRadius: borderRadius.sm,
+    padding: spacing.sm,
+  },
+  quickFillAppliedTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.success,
+    marginBottom: 2,
+  },
+  quickFillAppliedText: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   form: {
     gap: spacing.lg,
@@ -310,27 +354,35 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     color: colors.textMuted,
   },
-  input: {
-    height: 48,
-    backgroundColor: colors.surface,
+  cardFieldContainer: {
     borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: spacing.md,
-    fontSize: 15,
-    color: colors.text,
+    overflow: 'hidden',
   },
-  inputError: {
-    borderColor: colors.danger,
+  cardField: {
+    height: 56,
+    width: '100%',
+  },
+  securityNote: {
+    backgroundColor: colors.surfaceAlt,
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
+  },
+  securityNoteText: {
+    fontSize: 12,
+    color: colors.textMuted,
+    textAlign: 'center',
+  },
+  errorContainer: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: borderRadius.md,
+    padding: spacing.md,
+    marginTop: spacing.sm,
   },
   errorText: {
-    fontSize: 12,
+    fontSize: 13,
     color: colors.danger,
-    marginTop: spacing.xs,
-  },
-  row: {
-    flexDirection: 'row',
-    gap: spacing.md,
+    textAlign: 'center',
   },
   footer: {
     paddingHorizontal: spacing.xl,
