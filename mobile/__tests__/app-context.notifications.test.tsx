@@ -42,8 +42,13 @@ jest.mock('../src/lib/supabase', () => ({
 }));
 
 function UsageSimulationHarness() {
-  const { profile, grantPermission, setSelectedApps, createContract, simulateUsage } =
-    useApp();
+  const {
+    profile,
+    grantPermission,
+    setSelectedApps,
+    createContract,
+    simulateUsage,
+  } = useApp();
   const didRunRef = useRef(false);
 
   useEffect(() => {
@@ -57,7 +62,13 @@ function UsageSimulationHarness() {
     setSelectedApps([app]);
     createContract(3600);
     simulateUsage(app.bundleId, 1800);
-  }, [profile, grantPermission, setSelectedApps, createContract, simulateUsage]);
+  }, [
+    profile,
+    grantPermission,
+    setSelectedApps,
+    createContract,
+    simulateUsage,
+  ]);
 
   return null;
 }
