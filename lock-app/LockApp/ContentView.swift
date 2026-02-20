@@ -13,11 +13,44 @@ struct LockScreenView: View {
             VStack(spacing: 0) {
                 Spacer()
 
-                // 砂時計アイコン
-                Image(systemName: "hourglass")
-                    .font(.system(size: 56, weight: .light))
-                    .foregroundColor(.gray)
-                    .padding(.bottom, 24)
+                // アプリアイコン（薄暗い）
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    Color.purple.opacity(0.3),
+                                    Color.pink.opacity(0.3),
+                                    Color.orange.opacity(0.3)
+                                ],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 72, height: 72)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+
+                    // カメラアイコン
+                    Image(systemName: "camera.fill")
+                        .font(.system(size: 32))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+                .padding(.bottom, 16)
+
+                // 砂時計アイコンとアプリ名
+                HStack(spacing: 6) {
+                    Image(systemName: "hourglass")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.gray)
+
+                    Text(appName)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.gray)
+                }
+                .padding(.bottom, 24)
 
                 // タイトル
                 Text("App Limit")
@@ -44,7 +77,7 @@ struct LockScreenView: View {
                     }) {
                         Text("OK")
                             .font(.system(size: 20))
-                            .foregroundColor(.systemBlue)
+                            .foregroundColor(.blue)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                     }
@@ -57,7 +90,7 @@ struct LockScreenView: View {
                     }) {
                         Text("Request More Time")
                             .font(.system(size: 20))
-                            .foregroundColor(.systemBlue)
+                            .foregroundColor(.blue)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 16)
                     }
