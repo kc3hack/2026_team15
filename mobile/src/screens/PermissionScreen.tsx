@@ -57,10 +57,6 @@ export function PermissionScreen(): React.JSX.Element {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.content}>
-        <View style={styles.iconContainer}>
-          <Text style={styles.iconText}>{granted ? '✓' : '◯'}</Text>
-        </View>
-
         <View style={styles.textContainer}>
           <View style={styles.stepBadge}>
             <Text style={styles.stepBadgeText}>STEP 1 / 3</Text>
@@ -135,21 +131,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  iconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.surfaceAlt,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 40,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  iconText: {
-    fontSize: 32,
-    color: colors.textSecondary,
   },
   textContainer: {
     alignItems: 'center',
