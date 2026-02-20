@@ -5,44 +5,66 @@ struct LockScreenView: View {
     let appName: String = "Instagram"
 
     var body: some View {
-        VStack(spacing: 28) {
-            Spacer()
+        ZStack {
+            // 背景
+            Color.black
+                .ignoresSafeArea()
 
-            // アイコン（砂時計風 - iOS Screen Time風）
-            ZStack {
-                Circle()
-                    .fill(Color.gray.opacity(0.3))
-                    .frame(width: 90, height: 90)
+            VStack(spacing: 0) {
+                Spacer()
 
+                // 砂時計アイコン
                 Image(systemName: "hourglass")
-                    .font(.system(size: 40, weight: .medium))
+                    .font(.system(size: 56, weight: .light))
+                    .foregroundColor(.gray)
+                    .padding(.bottom, 24)
+
+                // タイトル
+                Text("App Limit")
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.white)
+                    .padding(.bottom, 12)
+
+                // メッセージ
+                Text("You've reached your limit for \(appName).")
+                    .font(.system(size: 17))
+                    .foregroundColor(.gray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+
+                Spacer()
+
+                // ボタン
+                VStack(spacing: 0) {
+                    Divider()
+                        .background(Color.gray.opacity(0.3))
+
+                    Button(action: {
+                        // 何もしない（OKボタン）
+                    }) {
+                        Text("OK")
+                            .font(.system(size: 20))
+                            .foregroundColor(.systemBlue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                    }
+
+                    Divider()
+                        .background(Color.gray.opacity(0.3))
+
+                    Button(action: {
+                        // 何もしない（Request More Time）
+                    }) {
+                        Text("Request More Time")
+                            .font(.system(size: 20))
+                            .foregroundColor(.systemBlue)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                    }
+                }
+                .background(Color.black)
             }
-
-            // タイトル
-            Text("制限中")
-                .font(.system(size: 24, weight: .semibold))
-                .foregroundColor(.white)
-                .multilineTextAlignment(.center)
-
-            // アプリ名
-            Text(appName)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.white.opacity(0.8))
-                .padding(.horizontal, 20)
-                .padding(.vertical, 8)
-
-            // メッセージ
-            Text("このアプリは制限されています\n使用制限に達しました")
-                .font(.system(size: 15))
-                .foregroundColor(.white.opacity(0.6))
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-
-            Spacer()
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.black)
         .statusBar(hidden: true)
     }
 }
