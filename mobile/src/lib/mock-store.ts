@@ -261,6 +261,15 @@ class MockStore {
     return contract;
   }
 
+  // Set contract from DB (for syncing with Supabase)
+  setContractFromDB(contract: Contract): void {
+    // Remove any existing contract with the same id
+    this.contracts = this.contracts.filter(c => c.id !== contract.id);
+    // Add the contract from DB
+    this.contracts.push(contract);
+    this.monitoringActive = contract.status === 'active';
+  }
+
   completeContract(contractId: string): void {
     const contract = this.contracts.find(c => c.id === contractId);
     if (contract) {

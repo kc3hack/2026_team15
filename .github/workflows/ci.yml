@@ -23,6 +23,11 @@ jobs:
           npm ci
           cd mobile && npm ci && cd ..
 
+      - name: Create .env file for tests
+        run: |
+          echo "SUPABASE_URL=https://test.supabase.co" > mobile/.env
+          echo "SUPABASE_ANON_KEY=test-anon-key" >> mobile/.env
+
       - name: Lint
         run: npm run mobile:lint
 
