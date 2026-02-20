@@ -10,6 +10,7 @@
     "mobile:lint": "npm --prefix mobile run lint",
     "mobile:format": "npm --prefix mobile run format",
     "mobile:format:check": "npm --prefix mobile run format:check",
+    "mobile:ci": "npm run mobile:format:check && npm run mobile:lint && npm run mobile:typecheck && npm run mobile:test",
     "supabase:start": "npx supabase@latest start",
     "supabase:stop": "npx supabase@latest stop",
     "supabase:status": "npx supabase@latest status",

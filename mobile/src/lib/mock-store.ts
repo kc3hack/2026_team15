@@ -337,6 +337,16 @@ class MockStore {
     return this.violations.filter(v => v.contractId === contractId);
   }
 
+  replaceViolationsForContract(
+    contractId: string,
+    violations: Violation[],
+  ): void {
+    this.violations = [
+      ...this.violations.filter(v => v.contractId !== contractId),
+      ...violations,
+    ];
+  }
+
   getTodayViolation(contractId: string): Violation | null {
     const today = this.getCurrentLocalDate();
     return (
@@ -355,6 +365,16 @@ class MockStore {
 
   getLedgerEntries(contractId: string): LedgerEntry[] {
     return this.ledgerEntries.filter(e => e.contractId === contractId);
+  }
+
+  replaceLedgerEntriesForContract(
+    contractId: string,
+    ledgerEntries: LedgerEntry[],
+  ): void {
+    this.ledgerEntries = [
+      ...this.ledgerEntries.filter(e => e.contractId !== contractId),
+      ...ledgerEntries,
+    ];
   }
 
   // Mock Screen Time
@@ -398,6 +418,10 @@ class MockStore {
 
   isShieldActive(): boolean {
     return this.shieldActive;
+  }
+
+  syncShieldState(contractId: string): void {
+    this.shieldActive = this.getTodayViolation(contractId) !== null;
   }
 
   resetDailyShield(): void {
