@@ -91,12 +91,12 @@ export function CreateContractScreen(): React.JSX.Element {
     PanResponder.create({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (event) => {
+      onPanResponderGrant: event => {
         initialTouchX.current = event.nativeEvent.pageX;
         initialThumbX.current = event.nativeEvent.locationX;
         updateLimitFromPosition(event.nativeEvent.locationX);
       },
-      onPanResponderMove: (event) => {
+      onPanResponderMove: event => {
         // Calculate new position based on movement from initial touch
         const deltaX = event.nativeEvent.pageX - initialTouchX.current;
         const newX = initialThumbX.current + deltaX;
