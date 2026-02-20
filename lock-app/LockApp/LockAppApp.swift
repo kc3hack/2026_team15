@@ -4,7 +4,7 @@ import SwiftUI
 struct LockAppApp: App {
     var body: some Scene {
         WindowGroup {
-            LockScreenView()
+            MainView()
         }
     }
 }
