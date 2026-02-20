@@ -39,7 +39,7 @@ function InfoCell({
   success?: boolean;
 }) {
   return (
-    <View style={styles.infoCell}>
+    <View style={[styles.infoCell, highlight && styles.infoCellHighlight]}>
       <Text style={styles.infoLabel}>{label}</Text>
       <Text
         style={[
@@ -150,16 +150,6 @@ function ActiveDashboard({
           </TouchableOpacity>
         </View>
 
-        {/* Shield alert */}
-        {isShielded && (
-          <View style={styles.shieldAlert}>
-            <Text style={styles.shieldTitle}>制限中</Text>
-            <Text style={styles.shieldText}>
-              本日は上限を超過しました。対象アプリはロックされています。
-            </Text>
-          </View>
-        )}
-
         {/* Contract info card */}
         <View style={styles.card}>
           <View style={styles.cardHeader}>
@@ -229,6 +219,14 @@ function ActiveDashboard({
               <Text style={styles.remainingLabel}>残り</Text>
               <Text style={styles.remainingValue}>
                 {formatSeconds(remainingSeconds)}
+              </Text>
+            </View>
+          )}
+          {todayViolation && (
+            <View style={styles.todayAlert}>
+              <Text style={styles.todayAlertTitle}>制限中</Text>
+              <Text style={styles.todayAlertText}>
+                本日は上限を超過しました。対象アプリはロックされています。
               </Text>
             </View>
           )}
@@ -506,25 +504,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
   },
-  // Shield alert
-  shieldAlert: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.md,
-    padding: spacing.lg,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.danger,
-  },
-  shieldTitle: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.xs,
-  },
-  shieldText: {
-    fontSize: 13,
-    color: colors.textSecondary,
-    lineHeight: 18,
-  },
   // Card styles
   card: {
     backgroundColor: colors.surface,
@@ -566,6 +545,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.sm,
     padding: spacing.md,
     gap: 2,
+  },
+  infoCellHighlight: {
+    borderWidth: 1,
+    borderColor: colors.primaryLight,
   },
   infoLabel: {
     fontSize: 12,
@@ -614,10 +597,28 @@ const styles = StyleSheet.create({
     color: colors.success,
   },
   statusBadgeDanger: {
+    backgroundColor: '#FEE2E2',
+    borderRadius: borderRadius.sm,
+    borderWidth: 1,
+    borderColor: '#FCA5A5',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  todayAlert: {
     backgroundColor: colors.surfaceAlt,
     borderRadius: borderRadius.sm,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.sm,
+    gap: 2,
+  },
+  todayAlertTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.danger,
+  },
+  todayAlertText: {
+    fontSize: 12,
+    color: colors.textSecondary,
   },
   statusBadgeDangerText: {
     fontSize: 12,

@@ -11,6 +11,13 @@ This document defines mandatory workflow rules for AI agents working in this rep
    - `fix/issue-<number>-<short-topic>`
    - `chore/issue-<number>-<short-topic>`
 
+## iOS Pods Sync Rules
+
+1. If iOS native dependencies or Pod-related files are touched, run:
+   - `cd mobile/ios && bundle exec pod install`
+2. Before iOS build or PR, verify `mobile/ios/Podfile.lock` and `mobile/ios/Pods/Manifest.lock` are in sync.
+3. If they are not in sync, re-run `bundle exec pod install` before continuing.
+
 ## Commit and PR Rules
 
 1. Commit messages must start with a type prefix, such as `feat:`, `fix:`, `docs:`, `chore:`.
