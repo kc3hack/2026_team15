@@ -9,12 +9,14 @@
 /* Begin PBXBuildFile section */
 		A11111110000000000000001 /* LockAppApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12222220000000000000001 /* LockAppApp.swift */; };
 		A11111110000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A12222220000000000000002 /* ContentView.swift */; };
+		A11111110000000000000003 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A12222220000000000000004 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		A12222220000000000000001 /* LockAppApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockAppApp.swift; sourceTree = "<group>"; };
 		A12222220000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A12222220000000000000003 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A12222220000000000000004 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A13333330000000000000001 /* LockApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LockApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -43,6 +45,7 @@
 				A12222220000000000000001 /* LockAppApp.swift */,
 				A12222220000000000000002 /* ContentView.swift */,
 				A12222220000000000000003 /* Info.plist */,
+				A12222220000000000000004 /* Assets.xcassets */,
 			);
 			path = LockApp;
 			sourceTree = "<group>";
@@ -113,6 +116,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11111110000000000000003 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
