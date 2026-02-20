@@ -5,45 +5,45 @@ struct LockScreenView: View {
     let appName: String = "Instagram"
 
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 28) {
             Spacer()
 
-            // アイコン
+            // アイコン（砂時計風 - iOS Screen Time風）
             ZStack {
                 Circle()
-                    .fill(Color.red.opacity(0.9))
-                    .frame(width: 80, height: 80)
+                    .fill(Color.gray.opacity(0.3))
+                    .frame(width: 90, height: 90)
 
-                Text("!")
-                    .font(.system(size: 40, weight: .semibold))
+                Image(systemName: "hourglass")
+                    .font(.system(size: 40, weight: .medium))
                     .foregroundColor(.white)
             }
 
             // タイトル
-            Text("このアプリは制限されています")
-                .font(.system(size: 22, weight: .semibold))
+            Text("制限中")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundColor(.white)
                 .multilineTextAlignment(.center)
 
             // アプリ名
             Text(appName)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.secondary)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(Color(.systemGray6))
-                .cornerRadius(10)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.white.opacity(0.8))
+                .padding(.horizontal, 20)
+                .padding(.vertical, 8)
 
             // メッセージ
-            Text("設定した契約に基づき、このアプリは現在ロックされています。\n\n制限を解除するには、契約条件を確認してください。")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
+            Text("このアプリは制限されています\n使用制限に達しました")
+                .font(.system(size: 15))
+                .foregroundColor(.white.opacity(0.6))
                 .multilineTextAlignment(.center)
-                .padding(.horizontal, 32)
+                .padding(.horizontal, 40)
 
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(Color.black)
+        .statusBar(hidden: true)
     }
 }
 
