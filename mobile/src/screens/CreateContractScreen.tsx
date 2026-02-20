@@ -5,23 +5,22 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator,
   Animated,
   PanResponder,
   type LayoutChangeEvent,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ReactNativeHapticFeedback from 'react-native-haptic-feedback';
 import { useApp } from '../lib/app-context';
 import { formatSeconds } from '../lib/mock-store';
 import { colors, spacing, borderRadius } from '../lib/theme';
 
-const PENALTY_PER_DAY = 500;
 const CONTRACT_DAYS = 7;
-const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
 const MIN_LIMIT_SECONDS = 1800;
 const MAX_LIMIT_SECONDS = 18000;
 const LIMIT_STEP_SECONDS = 300;
+const MIN_PENALTY_PER_DAY = 500;
+const MAX_PENALTY_PER_DAY = 2000;
+const PENALTY_STEP = 100;
 
 function SummaryRow({
   label,
@@ -45,25 +44,51 @@ function SummaryRow({
 }
 
 export function CreateContractScreen(): React.JSX.Element {
-  const { selectedApps, paymentCompleted, createContract, setStep } = useApp();
+  const {
+    selectedApps,
+    setPendingContractData,
+    setPendingPaymentMethodId,
+    setPaymentCompleted,
+    paymentCompleted,
+    setStep,
+  } = useApp();
   const [selectedLimit, setSelectedLimit] = useState(3600);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const sliderWidthRef = useRef(0);
-  const thumbPosition = useRef(new Animated.Value(0)).current;
-  const lastSnappedValue = useRef(3600);
-  const initialTouchX = useRef(0);
-  const initialThumbX = useRef(0);
+  const [selectedPenaltyPerDay, setSelectedPenaltyPerDay] =
+    useState(MIN_PENALTY_PER_DAY);
+  const limitSliderWidthRef = useRef(0);
+  const limitThumbPosition = useRef(new Animated.Value(0)).current;
+  const lastSnappedLimit = useRef(3600);
+  const limitInitialTouchX = useRef(0);
+  const limitInitialThumbX = useRef(0);
+  const penaltySliderWidthRef = useRef(0);
+  const penaltyThumbPosition = useRef(new Animated.Value(0)).current;
+  const lastSnappedPenalty = useRef(MIN_PENALTY_PER_DAY);
+  const penaltyInitialTouchX = useRef(0);
+  const penaltyInitialThumbX = useRef(0);
+
+  const limitRatio =
+    (selectedLimit - MIN_LIMIT_SECONDS) /
+    (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
+  const penaltyRatio =
+    (selectedPenaltyPerDay - MIN_PENALTY_PER_DAY) /
+    (MAX_PENALTY_PER_DAY - MIN_PENALTY_PER_DAY);
+  const depositTotal = selectedPenaltyPerDay * CONTRACT_DAYS;
+
+  const invalidatePaymentSelection = () => {
+    if (paymentCompleted) {
+      setPaymentCompleted(false);
+      setPendingPaymentMethodId(null);
+    }
+  };
 
   const updateLimitFromPosition = (positionX: number) => {
-    const width = sliderWidthRef.current;
+    const width = limitSliderWidthRef.current;
     if (width <= 0) return;
-    // Clamp position to keep thumb within bounds (thumb radius is 14px)
+
     const thumbRadius = 14;
     const minX = thumbRadius;
     const maxX = width - thumbRadius;
     const clampedX = Math.max(minX, Math.min(maxX, positionX));
-    // Adjust ratio calculation for the reduced range
     const ratio = (clampedX - thumbRadius) / (width - thumbRadius * 2);
     const rawLimit =
       MIN_LIMIT_SECONDS + ratio * (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
@@ -74,17 +99,39 @@ export function CreateContractScreen(): React.JSX.Element {
       Math.min(MAX_LIMIT_SECONDS, snappedLimit),
     );
 
-    // Only update and vibrate when value changes
-    if (boundedLimit !== lastSnappedValue.current) {
-      lastSnappedValue.current = boundedLimit;
+    if (boundedLimit !== lastSnappedLimit.current) {
+      lastSnappedLimit.current = boundedLimit;
       setSelectedLimit(boundedLimit);
-      // iOS native haptic feedback
-      ReactNativeHapticFeedback.trigger('impactMedium', {
-        enableVibrateFallback: true,
-      });
+      invalidatePaymentSelection();
     }
 
-    thumbPosition.setValue(clampedX);
+    limitThumbPosition.setValue(clampedX);
+  };
+
+  const updatePenaltyFromPosition = (positionX: number) => {
+    const width = penaltySliderWidthRef.current;
+    if (width <= 0) return;
+
+    const thumbRadius = 14;
+    const minX = thumbRadius;
+    const maxX = width - thumbRadius;
+    const clampedX = Math.max(minX, Math.min(maxX, positionX));
+    const ratio = (clampedX - thumbRadius) / (width - thumbRadius * 2);
+    const rawPenalty =
+      MIN_PENALTY_PER_DAY + ratio * (MAX_PENALTY_PER_DAY - MIN_PENALTY_PER_DAY);
+    const snappedPenalty = Math.round(rawPenalty / PENALTY_STEP) * PENALTY_STEP;
+    const boundedPenalty = Math.max(
+      MIN_PENALTY_PER_DAY,
+      Math.min(MAX_PENALTY_PER_DAY, snappedPenalty),
+    );
+
+    if (boundedPenalty !== lastSnappedPenalty.current) {
+      lastSnappedPenalty.current = boundedPenalty;
+      setSelectedPenaltyPerDay(boundedPenalty);
+      invalidatePaymentSelection();
+    }
+
+    penaltyThumbPosition.setValue(clampedX);
   };
 
   const panResponder = useRef(
@@ -92,125 +139,75 @@ export function CreateContractScreen(): React.JSX.Element {
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: event => {
-        initialTouchX.current = event.nativeEvent.pageX;
-        initialThumbX.current = event.nativeEvent.locationX;
+        limitInitialTouchX.current = event.nativeEvent.pageX;
+        limitInitialThumbX.current = event.nativeEvent.locationX;
         updateLimitFromPosition(event.nativeEvent.locationX);
       },
       onPanResponderMove: event => {
-        // Calculate new position based on movement from initial touch
-        const deltaX = event.nativeEvent.pageX - initialTouchX.current;
-        const newX = initialThumbX.current + deltaX;
+        const deltaX = event.nativeEvent.pageX - limitInitialTouchX.current;
+        const newX = limitInitialThumbX.current + deltaX;
         updateLimitFromPosition(newX);
       },
-      onPanResponderRelease: () => {},
       onPanResponderTerminationRequest: () => false,
     }),
   ).current;
 
-  const limitRatio =
-    (selectedLimit - MIN_LIMIT_SECONDS) /
-    (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
+  const penaltyPanResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: () => true,
+      onPanResponderGrant: event => {
+        penaltyInitialTouchX.current = event.nativeEvent.pageX;
+        penaltyInitialThumbX.current = event.nativeEvent.locationX;
+        updatePenaltyFromPosition(event.nativeEvent.locationX);
+      },
+      onPanResponderMove: event => {
+        const deltaX = event.nativeEvent.pageX - penaltyInitialTouchX.current;
+        const newX = penaltyInitialThumbX.current + deltaX;
+        updatePenaltyFromPosition(newX);
+      },
+      onPanResponderTerminationRequest: () => false,
+    }),
+  ).current;
 
-  const handleCreateContract = async () => {
-    setIsCreating(true);
-    await new Promise<void>(resolve => setTimeout(resolve, 1000));
-    await createContract(selectedLimit);
-    setIsCreating(false);
-  };
-
-  const handleProceedToConfirm = () => {
-    if (!paymentCompleted) {
-      setStep('payment');
-    } else {
-      setShowConfirm(true);
-    }
-  };
-
-  const handleBack = () => {
-    setStep('payment');
-  };
-
-  const handleSliderLayout = (event: LayoutChangeEvent) => {
+  const handleLimitSliderLayout = (event: LayoutChangeEvent) => {
     const width = event.nativeEvent.layout.width;
-    if (width > 0 && sliderWidthRef.current !== width) {
-      sliderWidthRef.current = width;
-      // Calculate initial thumb position based on selectedLimit
+    if (width > 0 && limitSliderWidthRef.current !== width) {
+      limitSliderWidthRef.current = width;
       const thumbRadius = 14;
       const ratio =
         (selectedLimit - MIN_LIMIT_SECONDS) /
         (MAX_LIMIT_SECONDS - MIN_LIMIT_SECONDS);
       const initialX = thumbRadius + ratio * (width - thumbRadius * 2);
-      thumbPosition.setValue(initialX);
+      limitThumbPosition.setValue(initialX);
     }
   };
 
-  if (showConfirm) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.confirmContent}>
-          <View style={styles.confirmText}>
-            <Text style={styles.confirmTitle}>契約を確定しますか？</Text>
-            <Text style={styles.confirmDescription}>
-              一度開始すると、1週間の契約期間中は解除できません。
-            </Text>
-          </View>
+  const handlePenaltySliderLayout = (event: LayoutChangeEvent) => {
+    const width = event.nativeEvent.layout.width;
+    if (width > 0 && penaltySliderWidthRef.current !== width) {
+      penaltySliderWidthRef.current = width;
+      const thumbRadius = 14;
+      const ratio =
+        (selectedPenaltyPerDay - MIN_PENALTY_PER_DAY) /
+        (MAX_PENALTY_PER_DAY - MIN_PENALTY_PER_DAY);
+      const initialX = thumbRadius + ratio * (width - thumbRadius * 2);
+      penaltyThumbPosition.setValue(initialX);
+    }
+  };
 
-          <View style={styles.selectedAppsSection}>
-            <Text style={styles.sectionLabel}>制限対象アプリ</Text>
-            <View style={styles.selectedAppsTags}>
-              {selectedApps.map(app => (
-                <View key={app.bundleId} style={styles.appTag}>
-                  <Text style={styles.appTagText}>{app.name}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
+  const handleProceedToPayment = () => {
+    setPendingContractData({
+      dailyLimitSeconds: selectedLimit,
+      penaltyPerDay: selectedPenaltyPerDay,
+      depositTotal,
+    });
+    setStep('payment');
+  };
 
-          <View style={styles.summaryCard}>
-            <SummaryRow label="日次上限" value={formatSeconds(selectedLimit)} />
-            <View style={styles.divider} />
-            <SummaryRow
-              label="ペナルティ"
-              value={`${PENALTY_PER_DAY.toLocaleString()}円/日`}
-            />
-            <View style={styles.divider} />
-            <SummaryRow label="契約期間" value={`${CONTRACT_DAYS}日間`} />
-            <View style={styles.divider} />
-            <SummaryRow
-              label="デポジット"
-              value={`${DEPOSIT_TOTAL.toLocaleString()}円`}
-              highlight
-            />
-          </View>
-
-          <View style={styles.confirmButtons}>
-            <TouchableOpacity
-              style={styles.button}
-              onPress={handleCreateContract}
-              disabled={isCreating}
-              activeOpacity={0.7}
-            >
-              {isCreating ? (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="small" color={colors.surface} />
-                  <Text style={styles.buttonText}>契約を作成中...</Text>
-                </View>
-              ) : (
-                <Text style={styles.buttonText}>契約を確定する</Text>
-              )}
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.buttonGhost}
-              onPress={() => setShowConfirm(false)}
-              disabled={isCreating}
-            >
-              <Text style={styles.buttonGhostText}>戻る</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  const handleBack = () => {
+    setStep('pick-apps');
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -249,7 +246,7 @@ export function CreateContractScreen(): React.JSX.Element {
           </View>
           <View
             style={styles.sliderContainer}
-            onLayout={handleSliderLayout}
+            onLayout={handleLimitSliderLayout}
             {...panResponder.panHandlers}
           >
             <View style={styles.sliderTrack} pointerEvents="none">
@@ -264,7 +261,7 @@ export function CreateContractScreen(): React.JSX.Element {
               style={[
                 styles.sliderThumb,
                 {
-                  transform: [{ translateX: thumbPosition }],
+                  transform: [{ translateX: limitThumbPosition }],
                 },
               ]}
               pointerEvents="none"
@@ -281,6 +278,47 @@ export function CreateContractScreen(): React.JSX.Element {
           </View>
         </View>
 
+        <View style={styles.penaltySection}>
+          <View style={styles.limitHeader}>
+            <Text style={styles.sectionLabel}>1日あたりのペナルティ</Text>
+            <Text style={styles.limitValue}>
+              {selectedPenaltyPerDay.toLocaleString()}円
+            </Text>
+          </View>
+          <View
+            style={styles.sliderContainer}
+            onLayout={handlePenaltySliderLayout}
+            {...penaltyPanResponder.panHandlers}
+          >
+            <View style={styles.sliderTrack} pointerEvents="none">
+              <View
+                style={[
+                  styles.sliderProgress,
+                  { width: `${penaltyRatio * 100}%` },
+                ]}
+              />
+            </View>
+            <Animated.View
+              style={[
+                styles.sliderThumb,
+                {
+                  transform: [{ translateX: penaltyThumbPosition }],
+                },
+              ]}
+              pointerEvents="none"
+            />
+          </View>
+          <View style={styles.sliderLabels}>
+            <Text style={styles.sliderLabel}>
+              {MIN_PENALTY_PER_DAY.toLocaleString()}円
+            </Text>
+            <Text style={styles.sliderStepText}>100円刻みで調整</Text>
+            <Text style={styles.sliderLabel}>
+              {MAX_PENALTY_PER_DAY.toLocaleString()}円
+            </Text>
+          </View>
+        </View>
+
         <View style={styles.contractSummary}>
           <Text style={styles.sectionLabel}>契約内容</Text>
           <View style={styles.summaryCard}>
@@ -288,12 +326,12 @@ export function CreateContractScreen(): React.JSX.Element {
             <View style={styles.divider} />
             <SummaryRow
               label="超過ペナルティ"
-              value={`${PENALTY_PER_DAY.toLocaleString()}円/日`}
+              value={`${selectedPenaltyPerDay.toLocaleString()}円/日`}
             />
             <View style={styles.divider} />
             <SummaryRow
               label="デポジット総額"
-              value={`${DEPOSIT_TOTAL.toLocaleString()}円`}
+              value={`${depositTotal.toLocaleString()}円`}
               highlight
             />
           </View>
@@ -306,12 +344,10 @@ export function CreateContractScreen(): React.JSX.Element {
       <View style={styles.footer}>
         <TouchableOpacity
           style={styles.button}
-          onPress={handleProceedToConfirm}
+          onPress={handleProceedToPayment}
           activeOpacity={0.7}
         >
-          <Text style={styles.buttonText}>
-            {paymentCompleted ? '契約内容を確認する' : '支払い方法を入力する'}
-          </Text>
+          <Text style={styles.buttonText}>支払い方法の入力へ進む</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -339,7 +375,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   header: {
-    marginBottom: spacing.xl,
+    marginBottom: spacing.xxl,
   },
   title: {
     fontSize: 22,
@@ -352,33 +388,31 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 20,
   },
+  selectedAppsSection: {
+    marginBottom: spacing.xl,
+  },
   sectionLabel: {
     fontSize: 12,
     fontWeight: '500',
     color: colors.textMuted,
     marginBottom: spacing.sm,
-  },
-  selectedAppsSection: {
-    marginBottom: spacing.xl,
-    width: '100%',
-    alignItems: 'center',
+    letterSpacing: 0.5,
   },
   selectedAppsTags: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.xs,
-    justifyContent: 'center',
   },
   appTag: {
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.sm,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.full,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderWidth: 1,
     borderColor: colors.border,
   },
   appTagText: {
-    fontSize: 13,
+    fontSize: 12,
     color: colors.textSecondary,
   },
   limitSection: {
@@ -387,28 +421,29 @@ const styles = StyleSheet.create({
   limitHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'baseline',
     marginBottom: spacing.md,
   },
   limitValue: {
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.primary,
+    fontSize: 18,
+    fontWeight: '600',
+    color: colors.text,
   },
   sliderContainer: {
-    height: 64,
+    position: 'relative',
     justifyContent: 'center',
+    height: 28,
+    marginBottom: spacing.sm,
   },
   sliderTrack: {
     height: 8,
-    borderRadius: 4,
+    borderRadius: borderRadius.full,
     backgroundColor: colors.surfaceAlt,
     overflow: 'hidden',
   },
   sliderProgress: {
     height: '100%',
     backgroundColor: colors.primary,
-    borderRadius: 4,
   },
   sliderThumb: {
     position: 'absolute',
@@ -418,11 +453,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 3,
     borderColor: colors.primary,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
-    elevation: 4,
     marginLeft: -14,
   },
   sliderLabels: {
@@ -436,27 +466,30 @@ const styles = StyleSheet.create({
   },
   sliderStepText: {
     fontSize: 12,
-    color: colors.textSecondary,
+    color: colors.textLight,
+  },
+  penaltySection: {
+    marginBottom: spacing.xl,
   },
   contractSummary: {
     marginBottom: spacing.xl,
   },
   summaryCard: {
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.md,
-    padding: spacing.xl,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    width: '100%',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
   },
   summaryRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.md,
   },
   summaryLabel: {
-    fontSize: 15,
+    fontSize: 14,
     color: colors.textSecondary,
   },
   summaryValue: {
@@ -465,18 +498,17 @@ const styles = StyleSheet.create({
     color: colors.text,
   },
   summaryValueHighlight: {
-    fontWeight: '600',
     color: colors.primary,
+    fontWeight: '600',
   },
   divider: {
     height: 1,
-    backgroundColor: colors.divider,
-    marginVertical: spacing.sm,
+    backgroundColor: colors.border,
   },
   contractNote: {
-    fontSize: 13,
-    color: colors.textMuted,
     marginTop: spacing.md,
+    fontSize: 12,
+    color: colors.textMuted,
     lineHeight: 18,
   },
   footer: {
@@ -493,57 +525,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     justifyContent: 'center',
     alignItems: 'center',
-    width: '100%',
-  },
-  buttonGhost: {
-    height: 44,
-    justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-  },
-  buttonGhostText: {
-    fontSize: 14,
-    color: colors.textSecondary,
   },
   buttonText: {
     fontSize: 15,
     fontWeight: '500',
     color: colors.surface,
-  },
-  loadingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  confirmContent: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.xxl,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  confirmText: {
-    alignItems: 'center',
-    marginBottom: spacing.xl,
-  },
-  confirmTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: spacing.sm,
-    textAlign: 'center',
-  },
-  confirmDescription: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
-  confirmButtons: {
-    width: '100%',
-    alignItems: 'center',
-    gap: spacing.md,
-    marginTop: spacing.lg,
   },
 });

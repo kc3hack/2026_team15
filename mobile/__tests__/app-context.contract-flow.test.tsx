@@ -114,7 +114,7 @@ function ContractCreationHarness({ onCreated }: HarnessProps) {
 
   useEffect(() => {
     if (!profile || selectedApps.length === 0) return;
-    void createContract(5400).then(onCreated);
+    void createContract(5400, 500).then(onCreated);
   }, [createContract, onCreated, profile, selectedApps]);
 
   return null;
@@ -136,6 +136,7 @@ describe('AppContext contract flow', () => {
           startAt: '2026-02-20T00:00:00.000Z',
           endAt: '2026-02-27T00:00:00.000Z',
           dailyLimitSeconds: 5400,
+          penaltyPerDay: 500,
           depositTotal: 3500,
           status: 'active',
           selectedApps: [MOCK_APP_CATALOG[0]],

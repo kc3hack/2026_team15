@@ -136,7 +136,7 @@ function UsageSimulationHarness() {
     didSimulateRef.current = true;
 
     const app = selectedApps[0];
-    void createContract(3600).then(() => {
+    void createContract(3600, 500).then(() => {
       simulateUsage(app.bundleId, 1800);
     });
   }, [profile, selectedApps, setSelectedApps, createContract, simulateUsage]);
@@ -160,6 +160,7 @@ describe('AppContext notifications', () => {
           startAt: '2026-02-20T00:00:00.000Z',
           endAt: '2026-02-27T00:00:00.000Z',
           dailyLimitSeconds: 3600,
+          penaltyPerDay: 500,
           depositTotal: 3500,
           status: 'active',
           selectedApps: [MOCK_APP_CATALOG[0]],

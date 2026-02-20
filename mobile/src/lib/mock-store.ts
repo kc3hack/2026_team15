@@ -222,7 +222,7 @@ class MockStore {
     return this.contracts[this.contracts.length - 1];
   }
 
-  createContract(dailyLimitSeconds: number): Contract {
+  createContract(dailyLimitSeconds: number, penaltyPerDay: number): Contract {
     const existing = this.getActiveContract();
     if (existing) throw new Error('Active contract already exists');
     if (!this.profile) throw new Error('Not logged in');
@@ -231,7 +231,6 @@ class MockStore {
     const endAt = new Date(now);
     endAt.setDate(endAt.getDate() + 7);
 
-    const penaltyPerDay = 500;
     const depositTotal = penaltyPerDay * 7;
 
     const contract: Contract = {
