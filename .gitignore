@@ -17,3 +17,8 @@ node_modules/
 supabase/.temp/
 supabase/.branches/
 supabase/.env.local
+
+# Xcode user-specific files
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad/
