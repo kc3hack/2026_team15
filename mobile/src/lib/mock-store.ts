@@ -149,6 +149,10 @@ class MockStore {
     return this.getCurrentLocalDate();
   }
 
+  getMockNowIso(): string {
+    return this.getMockNow().toISOString();
+  }
+
   advanceToNextDay(): string {
     this.mockDayOffset += 1;
     this.shieldActive = false;
