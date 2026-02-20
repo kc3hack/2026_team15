@@ -6,6 +6,7 @@ import React, {
   useEffect,
   type ReactNode,
 } from 'react';
+import { FunctionsHttpError } from '@supabase/supabase-js';
 import type {
   AppStep,
   AppInfo,
@@ -14,7 +15,7 @@ import type {
   Profile,
   Violation,
 } from '../types/domain';
-import { getLocalDate, mockStore } from './mock-store';
+import { mockStore } from './mock-store';
 import { supabase } from './supabase';
 import { notifyIfThresholdReached } from './usage-warning-notifier';
 import { env } from '../config/env';
@@ -96,6 +97,14 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     let session = sessionData.session;
+    if (session) {
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      if (userError || !userData.user) {
+        // Stored session can be stale after project/key changes; recreate it.
+        await supabase.auth.signOut();
+        session = null;
+      }
+    }
     if (!session) {
       const { data: signInData, error: signInError } =
         await supabase.auth.signInAnonymously();
@@ -357,9 +366,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
     if (!activeContract) return false;
 
     const exceededAt = new Date().toISOString();
-    const localDate = getLocalDate();
+    const localDate = mockStore.getMockLocalDate();
 
     try {
+      await ensureAuthenticatedProfile();
+
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession();
+      if (sessionError) {
+        throw sessionError;
+      }
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        throw new Error('Supabase access token is missing');
+      }
+
       const { data, error } = await supabase.functions.invoke<{
         ok: boolean;
         result?: { violation_applied?: boolean };
@@ -369,6 +390,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
           exceededAt,
           localDate,
         },
+        headers: accessToken
+          ? { Authorization: `Bearer ${accessToken}` }
+          : undefined,
       });
 
       if (error) {
@@ -379,12 +403,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
       refreshContract();
       return Boolean(data?.result?.violation_applied);
     } catch (error) {
-      console.warn('Failed to record violation via Edge Function:', error);
+      if (error instanceof FunctionsHttpError) {
+        let details: unknown = null;
+        try {
+          details = await error.context.json();
+        } catch {
+          details = null;
+        }
+        console.warn('record-violation returned non-2xx:', {
+          status: error.context.status,
+          statusText: error.context.statusText,
+          details,
+        });
+      } else {
+        console.warn('Failed to record violation via Edge Function:', error);
+      }
       const result = mockStore.recordViolation(activeContract.id);
+      console.warn('Falling back to local mock violation record');
       refreshContract();
       return result !== null;
     }
-  }, [activeContract, refreshContract, syncContractFinancials]);
+  }, [
+    activeContract,
+    ensureAuthenticatedProfile,
+    refreshContract,
+    syncContractFinancials,
+  ]);
 
   const resetDailyShield = useCallback(() => {
     mockStore.resetDailyShield();
