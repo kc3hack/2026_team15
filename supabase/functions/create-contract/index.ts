@@ -199,11 +199,11 @@ Deno.serve(async (req) => {
           daily_limit_seconds: dailyLimitSeconds,
           penalty_per_day: penaltyPerDay,
           deposit_total: depositTotal,
-        selected_apps: selectedApps,
-        status: "active",
-      })
-      .select()
-      .single()
+          selected_apps: selectedApps,
+          status: "active",
+        })
+        .select()
+        .single()
 
     if (contractError || !contract) {
       // Handle race condition: if unique constraint violation, fetch and return existing contract

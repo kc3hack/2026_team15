@@ -35,12 +35,37 @@ struct UnlockedView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            // Green gradient background for unlocked state
+            LinearGradient(
+                colors: [
+                    Color.green.opacity(0.3),
+                    Color.black
+                ],
+                startPoint: .top,
+                endPoint: .center
+            )
+            .ignoresSafeArea()
 
             VStack(spacing: 24) {
-                // App icon
+                // Large checkmark icon
                 ZStack {
-                    RoundedRectangle(cornerRadius: 16)
+                    Circle()
+                        .fill(Color.green.opacity(0.2))
+                        .frame(width: 120, height: 120)
+
+                    Circle()
+                        .stroke(Color.green, lineWidth: 3)
+                        .frame(width: 120, height: 120)
+
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 60))
+                        .foregroundColor(.green)
+                }
+                .padding(.bottom, 8)
+
+                // App icon (smaller, below checkmark)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
                         .fill(
                             LinearGradient(
                                 colors: [
@@ -52,54 +77,42 @@ struct UnlockedView: View {
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .frame(width: 72, height: 72)
+                        .frame(width: 48, height: 48)
 
                     Image(systemName: "camera.fill")
-                        .font(.system(size: 32))
+                        .font(.system(size: 20))
                         .foregroundColor(.white)
                 }
-                .padding(.bottom, 8)
 
                 Text("Instagram")
-                    .font(.system(size: 20, weight: .medium))
+                    .font(.system(size: 18, weight: .medium))
                     .foregroundColor(.white)
 
-                // Status
-                VStack(spacing: 12) {
-                    Text("App is Unlocked")
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundColor(.green)
+                // UNLOCKED text
+                Text("UNLOCKED")
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.green)
+                    .padding(.top, 8)
 
-                    // Progress bar
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.gray.opacity(0.3))
-                                .frame(height: 8)
+                Text("This app is available to use")
+                    .font(.system(size: 16))
+                    .foregroundColor(.gray)
 
-                            RoundedRectangle(cornerRadius: 4)
-                                .fill(Color.blue)
-                                .frame(width: geometry.size.width * lockManager.progress, height: 8)
-                        }
-                    }
-                    .frame(height: 8)
-                    .padding(.horizontal, 40)
+                // Time remaining
+                VStack(spacing: 8) {
+                    Text("Time Remaining Today")
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
 
-                    HStack {
-                        Text("Used: \(lockManager.usageFormatted)")
-                            .foregroundColor(.gray)
-                        Spacer()
-                        Text("Limit: \(lockManager.limitFormatted)")
-                            .foregroundColor(.gray)
-                    }
-                    .font(.system(size: 14))
-                    .padding(.horizontal, 40)
-
-                    Text("Remaining: \(lockManager.remainingFormatted)")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.blue)
+                    Text(lockManager.remainingFormatted)
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(.white)
                 }
                 .padding(.top, 16)
+                .padding(.horizontal, 40)
+                .padding(.vertical, 16)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(12)
 
                 Spacer()
 
@@ -114,7 +127,7 @@ struct UnlockedView: View {
                     .padding()
                 }
             }
-            .padding(.top, 80)
+            .padding(.top, 60)
             .padding(.bottom, 40)
         }
         .sheet(isPresented: $showSettings) {
