@@ -4,5 +4,6 @@ export type RootStackParamList = {
   PickApps: undefined;
   Payment: undefined;
   CreateContract: undefined;
+  ConfirmContract: undefined;
   Dashboard: undefined;
 };

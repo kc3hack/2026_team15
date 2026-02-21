@@ -10,6 +10,7 @@ import { PermissionScreen } from '../screens/PermissionScreen';
 import { PickAppsScreen } from '../screens/PickAppsScreen';
 import { PaymentScreen } from '../screens/PaymentScreen';
 import { CreateContractScreen } from '../screens/CreateContractScreen';
+import { ConfirmContractScreen } from '../screens/ConfirmContractScreen';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { RootStackParamList } from './types';
 import { useApp } from '../lib/app-context';
@@ -25,6 +26,7 @@ const STEP_TO_SCREEN: Record<AppStep, keyof RootStackParamList> = {
   'pick-apps': 'PickApps',
   payment: 'Payment',
   'create-contract': 'CreateContract',
+  'confirm-contract': 'ConfirmContract',
   dashboard: 'Dashboard',
 };
 
@@ -72,6 +74,10 @@ export function AppNavigator(): React.JSX.Element {
         <Stack.Screen name="PickApps" component={PickAppsScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
         <Stack.Screen name="CreateContract" component={CreateContractScreen} />
+        <Stack.Screen
+          name="ConfirmContract"
+          component={ConfirmContractScreen}
+        />
         <Stack.Screen name="Dashboard" component={DashboardScreen} />
       </Stack.Navigator>
     </NavigationContainer>

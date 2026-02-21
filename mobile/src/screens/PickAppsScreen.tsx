@@ -33,7 +33,7 @@ export function PickAppsScreen(): React.JSX.Element {
       selected.has(a.bundleId),
     );
     setSelectedApps(apps);
-    setStep('payment');
+    setStep('create-contract');
   };
 
   // Group apps by category
