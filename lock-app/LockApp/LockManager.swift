@@ -4,10 +4,19 @@ import Combine
 class LockManager: ObservableObject {
     static let shared = LockManager()
 
+    private let appGroupId = "group.com.yohaku.shared"
     private let defaults = UserDefaults.standard
+    private var sharedDefaults: UserDefaults? {
+        UserDefaults(suiteName: appGroupId)
+    }
     private let usageKey = "lockapp.usage_seconds"
     private let limitKey = "lockapp.limit_seconds"
     private let dateKey = "lockapp.date"
+    private let syncEnabledKey = "yohaku.syncEnabled"
+    private let sharedUsageKey = "yohaku.todayUsageSeconds"
+    private let sharedLimitKey = "yohaku.dailyLimitSeconds"
+    private let sharedBlockedKey = "yohaku.isBlocked"
+    private let sharedDateKey = "yohaku.localDate"
 
     @Published var usageSeconds: Int = 0
     @Published var limitSeconds: Int = 3600 // Default: 1 hour
@@ -20,6 +29,16 @@ class LockManager: ObservableObject {
     }
 
     private func loadState() {
+        if let shared = sharedDefaults,
+           shared.bool(forKey: syncEnabledKey) {
+            usageSeconds = shared.integer(forKey: sharedUsageKey)
+            let sharedLimit = shared.integer(forKey: sharedLimitKey)
+            limitSeconds = sharedLimit > 0 ? sharedLimit : 3600
+            currentDate = shared.string(forKey: sharedDateKey) ?? getTodayString()
+            isLocked = shared.bool(forKey: sharedBlockedKey)
+            return
+        }
+
         usageSeconds = defaults.integer(forKey: usageKey)
         limitSeconds = defaults.integer(forKey: limitKey)
         if limitSeconds == 0 {
@@ -42,6 +61,11 @@ class LockManager: ObservableObject {
     }
 
     private func checkDateChange() {
+        if let shared = sharedDefaults,
+           shared.bool(forKey: syncEnabledKey) {
+            // In synced mode, source of truth is mobile app state.
+            return
+        }
         let today = getTodayString()
         if currentDate != today {
             // New day - reset usage
@@ -57,6 +81,12 @@ class LockManager: ObservableObject {
     }
 
     // MARK: - Public Methods
+
+    func refreshState() {
+        loadState()
+        checkDateChange()
+        updateLockStatus()
+    }
 
     func setLimit(seconds: Int) {
         limitSeconds = max(60, seconds) // Minimum 1 minute

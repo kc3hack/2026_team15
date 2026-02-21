@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct MainView: View {
     @StateObject private var lockManager = LockManager.shared
@@ -25,6 +26,12 @@ struct MainView: View {
                 .sheet(isPresented: $showSettings) {
                     SettingsView()
                 }
+        }
+        .onAppear {
+            lockManager.refreshState()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            lockManager.refreshState()
         }
     }
 }

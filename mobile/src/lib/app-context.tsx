@@ -18,6 +18,7 @@ import type {
 import { mockStore } from './mock-store';
 import { supabase } from './supabase';
 import { notifyIfThresholdReached } from './usage-warning-notifier';
+import { SharedLockState } from '../native/shared-lock-state';
 import { env } from '../config/env';
 
 interface AppContextType {
@@ -228,6 +229,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
     void supabase.auth.signOut().catch(error => {
       console.warn('Failed to sign out from Supabase:', error);
     });
+    void SharedLockState.save({
+      syncEnabled: false,
+      dailyLimitSeconds: 0,
+      todayUsageSeconds: 0,
+      isBlocked: false,
+      localDate: mockStore.getMockLocalDate(),
+      updatedAt: new Date().toISOString(),
+    }).catch(error => {
+      console.warn('Failed to clear shared lock state on logout:', error);
+    });
     mockStore.logout();
     setProfile(null);
     setHasPermission(false);
@@ -368,6 +379,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
         );
         mockStore.syncShieldState(newContract.id);
         mockStore.checkContractExpiry();
+        void SharedLockState.save({
+          syncEnabled: true,
+          dailyLimitSeconds: newContract.dailyLimitSeconds,
+          todayUsageSeconds: mockStore.getTodayTotalUsage(),
+          isBlocked: false,
+          localDate: mockStore.getMockLocalDate(),
+          updatedAt: new Date().toISOString(),
+        }).catch(error => {
+          console.warn(
+            'Failed to sync shared lock state after contract creation:',
+            error,
+          );
+        });
 
         setActiveContract(mockStore.getActiveContract());
         setRefreshKey(k => k + 1);
@@ -386,6 +410,24 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const refreshContract = useCallback(() => {
     mockStore.checkContractExpiry();
     const contract = mockStore.getActiveContract();
+    const usageSeconds = contract ? mockStore.getTodayTotalUsage() : 0;
+    const isBlocked = contract
+      ? Boolean(
+          mockStore.getTodayViolation(contract.id) ||
+            usageSeconds >= contract.dailyLimitSeconds ||
+            mockStore.isShieldActive(),
+        )
+      : false;
+    void SharedLockState.save({
+      syncEnabled: Boolean(contract),
+      dailyLimitSeconds: contract?.dailyLimitSeconds ?? 0,
+      todayUsageSeconds: usageSeconds,
+      isBlocked,
+      localDate: mockStore.getMockLocalDate(),
+      updatedAt: new Date().toISOString(),
+    }).catch(error => {
+      console.warn('Failed to sync shared lock state:', error);
+    });
     setActiveContract(contract);
     setRefreshKey(k => k + 1);
   }, []);
