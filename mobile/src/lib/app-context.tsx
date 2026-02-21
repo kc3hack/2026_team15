@@ -51,6 +51,7 @@ interface AppContextType {
   createContract: (
     dailyLimitSeconds: number,
     penaltyPerDay: number,
+    paymentIntentId: string,
   ) => Promise<boolean>;
   activeContract: Contract | null;
   refreshContract: () => void;
@@ -275,9 +276,17 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createContract = useCallback(
-    async (dailyLimitSeconds: number, penaltyPerDay: number) => {
+    async (
+      dailyLimitSeconds: number,
+      penaltyPerDay: number,
+      paymentIntentId: string,
+    ) => {
       if (selectedApps.length === 0) {
         console.error('[createContract] No selected apps');
+        return false;
+      }
+      if (!paymentIntentId) {
+        console.error('[createContract] Missing paymentIntentId');
         return false;
       }
 
@@ -312,6 +321,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
                 name: app.name,
                 category: app.category,
               })),
+              paymentIntentId,
               contractDays: 7,
               clientNowIso,
               clientLocalDate,
@@ -587,10 +597,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       } else {
         console.warn('Failed to record violation via Edge Function:', error);
       }
-      const result = mockStore.recordViolation(activeContract.id);
-      console.warn('Falling back to local mock violation record');
-      refreshContract();
-      return result !== null;
+      return false;
     }
   }, [
     activeContract,

@@ -7,8 +7,8 @@ const corsHeaders = {
 }
 
 type CreatePaymentIntentBody = {
-  amount?: number
-  currency?: string
+  penaltyPerDay?: number
+  contractDays?: number
 }
 
 Deno.serve(async (req) => {
@@ -58,8 +58,29 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json() as CreatePaymentIntentBody
-    const amount = body.amount ?? 3500 // Default: 3500 yen (7 days * 500 yen)
-    const currency = body.currency ?? "jpy"
+    const penaltyPerDay = body.penaltyPerDay
+    const contractDays = body.contractDays ?? 7
+
+    if (
+      !penaltyPerDay ||
+      penaltyPerDay < 500 ||
+      penaltyPerDay > 2000 ||
+      penaltyPerDay % 100 !== 0
+    ) {
+      return new Response(
+        JSON.stringify({ error: "invalid_penalty_per_day" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+    if (contractDays !== 7) {
+      return new Response(
+        JSON.stringify({ error: "invalid_contract_days" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
+    const amount = penaltyPerDay * contractDays
+    const currency = "jpy"
 
     // Create PaymentIntent via Stripe API
     const stripeResponse = await fetch("https://api.stripe.com/v1/payment_intents", {
@@ -72,6 +93,8 @@ Deno.serve(async (req) => {
         amount: amount.toString(),
         currency: currency,
         "metadata[user_id]": authData.user.id,
+        "metadata[penalty_per_day]": penaltyPerDay.toString(),
+        "metadata[contract_days]": contractDays.toString(),
         "automatic_payment_methods[enabled]": "true",
       }).toString(),
     })
