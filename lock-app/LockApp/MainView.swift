@@ -3,28 +3,39 @@ import SwiftUI
 struct MainView: View {
     @StateObject private var lockManager = LockManager.shared
     @State private var showSettings = false
+    @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
-        if lockManager.isLocked {
-            LockScreenView()
-                .overlay(
-                    Button(action: { showSettings = true }) {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(.gray.opacity(0.5))
-                            .padding()
+        Group {
+            if lockManager.isLocked {
+                LockScreenView()
+                    .overlay(
+                        Button(action: { showSettings = true }) {
+                            Image(systemName: "gearshape.fill")
+                                .foregroundColor(.gray.opacity(0.5))
+                                .padding()
+                        }
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .padding(.top, 60)
+                        .padding(.leading, 20)
+                    )
+                    .sheet(isPresented: $showSettings) {
+                        SettingsView()
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                    .padding(.top, 60)
-                    .padding(.leading, 20)
-                )
-                .sheet(isPresented: $showSettings) {
-                    SettingsView()
-                }
-        } else {
-            UnlockedView()
-                .sheet(isPresented: $showSettings) {
-                    SettingsView()
-                }
+            } else {
+                UnlockedView()
+                    .sheet(isPresented: $showSettings) {
+                        SettingsView()
+                    }
+            }
+        }
+        .onAppear {
+            lockManager.refreshState()
+        }
+        .onChange(of: scenePhase) { _, newPhase in
+            if newPhase == .active {
+                lockManager.refreshState()
+            }
         }
     }
 }

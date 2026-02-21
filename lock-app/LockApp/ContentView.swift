@@ -1,5 +1,16 @@
 import SwiftUI
 
+extension View {
+    @ViewBuilder
+    func lockAppStatusBarHidden() -> some View {
+#if os(iOS)
+        self.statusBar(hidden: true)
+#else
+        self
+#endif
+    }
+}
+
 struct LockScreenView: View {
     // アプリ名はここで変更できます
     let appName: String = "Instagram"
@@ -98,7 +109,7 @@ struct LockScreenView: View {
                 .background(Color.black)
             }
         }
-        .statusBar(hidden: true)
+        .lockAppStatusBarHidden()
     }
 }
 

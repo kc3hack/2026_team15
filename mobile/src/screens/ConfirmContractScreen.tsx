@@ -70,8 +70,9 @@ export function ConfirmContractScreen(): React.JSX.Element {
         data: { session },
       } = await supabase.auth.getSession();
 
-      if (!session) {
+      if (!session?.access_token) {
         setError('ログインが必要です');
+        console.error('[ConfirmContract] Missing access token in session');
         return;
       }
 
@@ -82,6 +83,7 @@ export function ConfirmContractScreen(): React.JSX.Element {
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${session.access_token}`,
+            apikey: env.supabaseAnonKey,
           },
           body: JSON.stringify({
             amount: pendingContractData.depositTotal,
@@ -91,8 +93,32 @@ export function ConfirmContractScreen(): React.JSX.Element {
       );
 
       if (!paymentIntentResponse.ok) {
-        const errorData = await paymentIntentResponse.json();
-        setError(errorData.error || '決済の準備に失敗しました');
+        let errorData: Record<string, unknown> | null = null;
+        try {
+          errorData = (await paymentIntentResponse.json()) as Record<
+            string,
+            unknown
+          >;
+        } catch {
+          errorData = null;
+        }
+
+        const details =
+          (typeof errorData?.error === 'string' && errorData.error) ||
+          (typeof errorData?.message === 'string' && errorData.message) ||
+          (typeof errorData?.code === 'string' && errorData.code) ||
+          paymentIntentResponse.statusText;
+
+        console.error('[ConfirmContract] create-payment-intent failed', {
+          status: paymentIntentResponse.status,
+          details,
+          errorData,
+        });
+        setError(
+          details
+            ? `決済の準備に失敗しました: ${details}`
+            : '決済の準備に失敗しました',
+        );
         return;
       }
 
