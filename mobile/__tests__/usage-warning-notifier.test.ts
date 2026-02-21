@@ -47,7 +47,7 @@ describe('usage-warning-notifier', () => {
     await notifyIfThresholdReached({
       contractId: 'contract-1',
       localDate: '2026-02-20',
-      usageSeconds: 790,
+      usageSeconds: 490,
       dailyLimitSeconds: 1000,
     });
 
@@ -74,6 +74,12 @@ describe('usage-warning-notifier', () => {
     });
 
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledTimes(1);
+    expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Yohakuからリマインド',
+        body: '今日の利用時間が80%です。\nもし100%に達してしまったら…',
+      }),
+    );
     expect(AsyncStorage.getItem).toHaveBeenNthCalledWith(
       1,
       'usage-warning:contract-1:2026-02-20:80',
@@ -81,18 +87,24 @@ describe('usage-warning-notifier', () => {
     expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);
   });
 
-  it('sends one notification at 90%', async () => {
+  it('sends one notification at 50%', async () => {
     (AsyncStorage.getItem as jest.Mock).mockResolvedValue(null);
 
     await notifyIfThresholdReached({
       contractId: 'contract-1',
       localDate: '2026-02-20',
-      usageSeconds: 900,
+      usageSeconds: 500,
       dailyLimitSeconds: 1000,
     });
 
     expect(AsyncStorage.getItem).toHaveBeenCalledWith(
-      'usage-warning:contract-1:2026-02-20:90',
+      'usage-warning:contract-1:2026-02-20:50',
+    );
+    expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Yohakuからリマインド',
+        body: '今日の利用時間が50%に到達しました。\nつい使いすぎていませんか？',
+      }),
     );
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledTimes(1);
     expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);
@@ -104,24 +116,24 @@ describe('usage-warning-notifier', () => {
     await notifyIfThresholdReached({
       contractId: 'contract-1',
       localDate: '2026-02-20',
-      usageSeconds: 800,
+      usageSeconds: 500,
       dailyLimitSeconds: 1000,
     });
     await notifyIfThresholdReached({
       contractId: 'contract-1',
       localDate: '2026-02-21',
-      usageSeconds: 800,
+      usageSeconds: 500,
       dailyLimitSeconds: 1000,
     });
 
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledTimes(2);
     expect(AsyncStorage.getItem).toHaveBeenNthCalledWith(
       1,
-      'usage-warning:contract-1:2026-02-20:80',
+      'usage-warning:contract-1:2026-02-20:50',
     );
     expect(AsyncStorage.getItem).toHaveBeenNthCalledWith(
       2,
-      'usage-warning:contract-1:2026-02-21:80',
+      'usage-warning:contract-1:2026-02-21:50',
     );
   });
 });

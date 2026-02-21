@@ -142,7 +142,7 @@ function ActiveDashboard({
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>ヨハク</Text>
+            <Text style={styles.headerTitle}>Yohaku</Text>
             <Text style={styles.headerSubtitle}>契約中</Text>
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
@@ -340,7 +340,7 @@ function CompletedDashboard({
         {/* Header */}
         <View style={styles.header}>
           <View>
-            <Text style={styles.headerTitle}>ヨハク</Text>
+            <Text style={styles.headerTitle}>Yohaku</Text>
             <Text style={styles.headerSubtitle}>契約完了</Text>
           </View>
           <TouchableOpacity style={styles.logoutButton} onPress={logout}>
