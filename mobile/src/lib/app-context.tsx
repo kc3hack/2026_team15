@@ -36,13 +36,22 @@ interface AppContextType {
   setPaymentCompleted: (completed: boolean) => void;
   pendingContractData: {
     dailyLimitSeconds: number;
+    penaltyPerDay: number;
     depositTotal: number;
   } | null;
-  setPendingContractData: (data: {
-    dailyLimitSeconds: number;
-    depositTotal: number;
-  }) => void;
-  createContract: (dailyLimitSeconds: number) => Promise<boolean>;
+  setPendingContractData: (
+    data: {
+      dailyLimitSeconds: number;
+      penaltyPerDay: number;
+      depositTotal: number;
+    } | null,
+  ) => void;
+  pendingPaymentMethodId: string | null;
+  setPendingPaymentMethodId: (paymentMethodId: string | null) => void;
+  createContract: (
+    dailyLimitSeconds: number,
+    penaltyPerDay: number,
+  ) => Promise<boolean>;
   activeContract: Contract | null;
   refreshContract: () => void;
   simulateUsage: (bundleId: string, seconds: number) => void;
@@ -91,8 +100,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [paymentCompleted, setPaymentCompleted] = useState(false);
   const [pendingContractData, setPendingContractData] = useState<{
     dailyLimitSeconds: number;
+    penaltyPerDay: number;
     depositTotal: number;
   } | null>(null);
+  const [pendingPaymentMethodId, setPendingPaymentMethodId] = useState<
+    string | null
+  >(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [_, setRefreshKey] = useState(0);
 
@@ -246,6 +259,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setActiveContract(null);
     setPaymentCompleted(false);
     setPendingContractData(null);
+    setPendingPaymentMethodId(null);
     setStep('login');
   }, []);
 
@@ -261,14 +275,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const createContract = useCallback(
-    async (dailyLimitSeconds: number) => {
+    async (dailyLimitSeconds: number, penaltyPerDay: number) => {
       if (selectedApps.length === 0) {
         console.error('[createContract] No selected apps');
         return false;
       }
 
-      // Calculate deposit total (500 yen/day * 7 days)
-      const depositTotal = 500 * 7;
+      const depositTotal = penaltyPerDay * 7;
 
       try {
         await ensureAuthenticatedProfile();
@@ -292,6 +305,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
             },
             body: JSON.stringify({
               dailyLimitSeconds,
+              penaltyPerDay,
               depositTotal,
               selectedApps: selectedApps.map(app => ({
                 bundleId: app.bundleId,
@@ -320,7 +334,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           startAt: contract.startAt,
           endAt: contract.endAt,
           dailyLimitSeconds: contract.dailyLimitSeconds,
-          penaltyPerDay: 500,
+          penaltyPerDay: contract.penaltyPerDay,
           depositTotal: contract.depositTotal,
           status: contract.status,
           selectedApps: contract.selectedApps,
@@ -397,6 +411,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setRefreshKey(k => k + 1);
         setPaymentCompleted(false);
         setPendingContractData(null);
+        setPendingPaymentMethodId(null);
         setStep('dashboard');
         return true;
       } catch (error) {
@@ -611,6 +626,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         setPaymentCompleted,
         pendingContractData,
         setPendingContractData,
+        pendingPaymentMethodId,
+        setPendingPaymentMethodId,
         createContract,
         activeContract,
         refreshContract,

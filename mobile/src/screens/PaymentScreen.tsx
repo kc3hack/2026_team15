@@ -14,17 +14,16 @@ import {
   CardFieldInput,
 } from '@stripe/stripe-react-native';
 import { useApp } from '../lib/app-context';
-import { supabase } from '../lib/supabase';
-import { env } from '../config/env';
 import { colors, spacing, borderRadius } from '../lib/theme';
 
-const PENALTY_PER_DAY = 500;
-const CONTRACT_DAYS = 7;
-const DEPOSIT_TOTAL = PENALTY_PER_DAY * CONTRACT_DAYS;
-
 export function PaymentScreen(): React.JSX.Element {
-  const { setPaymentCompleted, setStep } = useApp();
-  const { confirmPayment } = useStripe();
+  const {
+    pendingContractData,
+    setPendingPaymentMethodId,
+    setPaymentCompleted,
+    setStep,
+  } = useApp();
+  const { createPaymentMethod } = useStripe();
   const [cardDetails, setCardDetails] = useState<CardFieldInput.Details | null>(
     null,
   );
@@ -32,8 +31,13 @@ export function PaymentScreen(): React.JSX.Element {
   const [error, setError] = useState<string | null>(null);
 
   const isCardComplete = cardDetails?.complete ?? false;
+  const depositTotal = pendingContractData?.depositTotal ?? 0;
 
   const handleSubmit = async () => {
+    if (!pendingContractData) {
+      setError('先に契約内容を設定してください');
+      return;
+    }
     if (!isCardComplete) {
       setError('カード情報を正しく入力してください');
       return;
@@ -43,62 +47,23 @@ export function PaymentScreen(): React.JSX.Element {
     setError(null);
 
     try {
-      // Get the current session for auth token
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (!session) {
-        setError('ログインが必要です');
+      const { paymentMethod, error: paymentMethodError } =
+        await createPaymentMethod({
+          paymentMethodType: 'Card',
+        });
+
+      if (paymentMethodError || !paymentMethod?.id) {
+        setError(
+          paymentMethodError?.message ?? 'カード情報の保存に失敗しました',
+        );
         return;
       }
 
-      // Call backend to create PaymentIntent
-      const response = await fetch(
-        `${env.supabaseUrl}/functions/v1/create-payment-intent`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${session.access_token}`,
-          },
-          body: JSON.stringify({
-            amount: DEPOSIT_TOTAL,
-            currency: 'jpy',
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('[Payment] Backend error:', errorData);
-        setError(errorData.error || '決済の準備に失敗しました');
-        return;
-      }
-
-      const { clientSecret } = await response.json();
-
-      // Confirm payment with Stripe
-      const { error: confirmError, paymentIntent } = await confirmPayment(
-        clientSecret,
-        { paymentMethodType: 'Card' },
-      );
-
-      if (confirmError) {
-        console.error('[Payment] Stripe error:', confirmError);
-        setError(confirmError.message ?? '決済エラーが発生しました');
-        return;
-      }
-
-      console.log('[Payment] Success:', {
-        id: paymentIntent?.id,
-        amount: paymentIntent?.amount,
-        status: paymentIntent?.status,
-      });
-
+      setPendingPaymentMethodId(paymentMethod.id);
       setPaymentCompleted(true);
-      setStep('create-contract');
+      setStep('confirm-contract');
     } catch (e) {
-      setError('決済処理中にエラーが発生しました');
+      setError('カード情報の処理中にエラーが発生しました');
       console.error('[Payment] Error:', e);
     } finally {
       setIsProcessing(false);
@@ -106,7 +71,7 @@ export function PaymentScreen(): React.JSX.Element {
   };
 
   const handleBack = () => {
-    setStep('pick-apps');
+    setStep('create-contract');
   };
 
   return (
@@ -115,7 +80,6 @@ export function PaymentScreen(): React.JSX.Element {
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Back button */}
         <TouchableOpacity
           style={styles.backButton}
           onPress={handleBack}
@@ -124,19 +88,17 @@ export function PaymentScreen(): React.JSX.Element {
           <Text style={styles.backButtonText}>← 戻る</Text>
         </TouchableOpacity>
 
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>支払い方法</Text>
           <Text style={styles.description}>
             デポジット{' '}
             <Text style={styles.highlight}>
-              {DEPOSIT_TOTAL.toLocaleString()}円
+              {depositTotal.toLocaleString()}円
             </Text>{' '}
-            の支払い情報を入力してください。
+            の支払いに使うカード情報を入力してください。
           </Text>
         </View>
 
-        {/* Payment form */}
         <View style={styles.form}>
           <View style={styles.inputGroup}>
             <Text style={styles.label}>カード情報</Text>
@@ -163,14 +125,12 @@ export function PaymentScreen(): React.JSX.Element {
             </View>
           </View>
 
-          {/* Security note */}
           <View style={styles.securityNote}>
             <Text style={styles.securityNoteText}>
               🔒 カード情報は暗号化されてStripeを通じて安全に処理されます
             </Text>
           </View>
 
-          {/* Error message */}
           {error && (
             <View style={styles.errorContainer}>
               <Text style={styles.errorText}>{error}</Text>
@@ -179,7 +139,6 @@ export function PaymentScreen(): React.JSX.Element {
         </View>
       </ScrollView>
 
-      {/* Submit button */}
       <View style={styles.footer}>
         <TouchableOpacity
           style={[
@@ -196,9 +155,7 @@ export function PaymentScreen(): React.JSX.Element {
               <Text style={styles.buttonText}>処理中...</Text>
             </View>
           ) : (
-            <Text style={styles.buttonText}>
-              {DEPOSIT_TOTAL.toLocaleString()}円を支払う
-            </Text>
+            <Text style={styles.buttonText}>契約内容の確認へ進む</Text>
           )}
         </TouchableOpacity>
       </View>

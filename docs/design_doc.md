@@ -72,6 +72,13 @@ YOHAKU は、スマホ利用に「契約」と「金銭コミットメント（�
 
 アプリ起動時に Supabase の active 契約を確認し、存在する場合は Dashboard に遷移します。
 
+### 5.4 契約フローと金額選択
+
+- 画面遷移: `PickApps -> CreateContract -> Payment -> ConfirmContract -> Dashboard`
+- 日次ペナルティは `500〜2000` 円を `100` 円刻みで選択
+- デポジット総額は `penalty_per_day * 7` を利用
+- 最終確認画面で決済成功後に契約を作成
+
 ## 6. 現時点で対象外
 
 - Sign in with Apple の本番運用

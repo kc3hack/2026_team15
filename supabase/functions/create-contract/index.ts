@@ -13,6 +13,7 @@ const corsHeaders = {
 
 type CreateContractBody = {
   dailyLimitSeconds: number
+  penaltyPerDay: number
   depositTotal: number
   selectedApps: Array<{
     bundleId: string
@@ -77,6 +78,7 @@ Deno.serve(async (req) => {
     const body = await req.json() as CreateContractBody
     const {
       dailyLimitSeconds,
+      penaltyPerDay,
       depositTotal,
       selectedApps,
       contractDays = 7,
@@ -87,6 +89,23 @@ Deno.serve(async (req) => {
     if (!dailyLimitSeconds || dailyLimitSeconds <= 0) {
       return new Response(
         JSON.stringify({ error: "invalid_daily_limit" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+    if (
+      !penaltyPerDay ||
+      penaltyPerDay < 500 ||
+      penaltyPerDay > 2000 ||
+      penaltyPerDay % 100 !== 0
+    ) {
+      return new Response(
+        JSON.stringify({ error: "invalid_penalty_per_day" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+    if (depositTotal !== penaltyPerDay * 7) {
+      return new Response(
+        JSON.stringify({ error: "deposit_mismatch" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
@@ -156,6 +175,7 @@ Deno.serve(async (req) => {
             startAt: activeContract.start_at,
             endAt: activeContract.end_at,
             dailyLimitSeconds: activeContract.daily_limit_seconds,
+            penaltyPerDay: activeContract.penalty_per_day,
             depositTotal: activeContract.deposit_total,
             selectedApps: activeContract.selected_apps,
             status: activeContract.status,
@@ -166,7 +186,6 @@ Deno.serve(async (req) => {
     }
 
     // Calculate contract dates
-    const now = baseNow
     const endAt = new Date(baseNow)
     endAt.setDate(endAt.getDate() + contractDays)
 
@@ -178,7 +197,7 @@ Deno.serve(async (req) => {
           start_at: baseNow.toISOString(),
           end_at: endAt.toISOString(),
           daily_limit_seconds: dailyLimitSeconds,
-          penalty_per_day: 500,
+          penalty_per_day: penaltyPerDay,
           deposit_total: depositTotal,
           selected_apps: selectedApps,
           status: "active",
@@ -205,6 +224,7 @@ Deno.serve(async (req) => {
                 startAt: existingContract.start_at,
                 endAt: existingContract.end_at,
                 dailyLimitSeconds: existingContract.daily_limit_seconds,
+                penaltyPerDay: existingContract.penalty_per_day,
                 depositTotal: existingContract.deposit_total,
                 selectedApps: existingContract.selected_apps,
                 status: existingContract.status,
@@ -247,6 +267,7 @@ Deno.serve(async (req) => {
           startAt: contract.start_at,
           endAt: contract.end_at,
           dailyLimitSeconds: contract.daily_limit_seconds,
+          penaltyPerDay: contract.penalty_per_day,
           depositTotal: contract.deposit_total,
           selectedApps: contract.selected_apps,
           status: contract.status,

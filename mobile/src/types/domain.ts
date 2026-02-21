@@ -62,6 +62,7 @@ export type AppStep =
   | 'pick-apps'
   | 'create-contract'
   | 'payment'
+  | 'confirm-contract'
   | 'dashboard';
 
 // Mock Screen Time Usage
