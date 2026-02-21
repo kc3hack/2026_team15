@@ -30,7 +30,7 @@ export function LoginScreen(): React.JSX.Element {
       <View style={styles.content}>
         {/* Brand */}
         <View style={styles.brandContainer}>
-          <Text style={styles.title}>ヨハク</Text>
+          <Text style={styles.title}>Yohaku</Text>
           <Text style={styles.subtitle}>スマホから、余白を取り戻す</Text>
         </View>
 
