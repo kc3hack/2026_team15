@@ -29,9 +29,9 @@ function buildNotificationId(contractId: string, threshold: number): string {
 
 function buildNotificationBody(thresholdPercent: number): string {
   if (thresholdPercent >= 80) {
-    return '今日の利用時間が80%です。もし100%に達してしまったら…';
+    return '今日の利用時間が80%です。\nもし100%に達してしまったら…';
   }
-  return '今日の利用時間が50%に到達しました。つい使いすぎていませんか？';
+  return '今日の利用時間が50%に到達しました。\nつい使いすぎていませんか？';
 }
 
 export async function requestPermission(): Promise<boolean> {

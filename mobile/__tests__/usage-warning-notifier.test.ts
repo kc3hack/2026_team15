@@ -77,7 +77,7 @@ describe('usage-warning-notifier', () => {
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Yohakuからリマインド',
-        body: '今日の利用時間が80%です。もし100%に達してしまったら…',
+        body: '今日の利用時間が80%です。\nもし100%に達してしまったら…',
       }),
     );
     expect(AsyncStorage.getItem).toHaveBeenNthCalledWith(
@@ -103,7 +103,7 @@ describe('usage-warning-notifier', () => {
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledWith(
       expect.objectContaining({
         title: 'Yohakuからリマインド',
-        body: '今日の利用時間が50%に到達しました。つい使いすぎていませんか？',
+        body: '今日の利用時間が50%に到達しました。\nつい使いすぎていませんか？',
       }),
     );
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledTimes(1);
