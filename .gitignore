@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.ruby-lsp/
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
@@ -16,3 +17,8 @@ node_modules/
 supabase/.temp/
 supabase/.branches/
 supabase/.env.local
+
+# Xcode user-specific files
+*.xcuserstate
+xcuserdata/
+*.xcuserdatad/

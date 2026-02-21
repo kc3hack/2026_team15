@@ -19,10 +19,9 @@ Deno.serve(async (req) => {
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
 
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+    if (!supabaseUrl || !supabaseServiceRoleKey) {
       return new Response(
         JSON.stringify({ error: "missing_env" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -36,15 +35,25 @@ Deno.serve(async (req) => {
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
+    const accessToken = authHeader.replace(/^Bearer\s+/i, "").trim()
+    if (!accessToken) {
+      return new Response(
+        JSON.stringify({ error: "invalid_authorization_header" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
 
-    const authClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+    const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     })
-    const { data: authData, error: authError } = await authClient.auth.getUser()
+    const { data: authData, error: authError } = await adminClient.auth.getUser(accessToken)
+
     if (authError || !authData.user) {
       return new Response(
-        JSON.stringify({ error: "invalid_user_token" }),
+        JSON.stringify({
+          error: "invalid_user_token",
+          details: authError?.message ?? null,
+        }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
@@ -60,9 +69,6 @@ Deno.serve(async (req) => {
     const exceededAt = body.exceededAt ?? new Date().toISOString()
     const localDate = body.localDate ?? exceededAt.slice(0, 10)
 
-    const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
-      auth: { persistSession: false, autoRefreshToken: false },
-    })
     const { data, error } = await adminClient.rpc("record_violation", {
       p_contract_id: body.contractId,
       p_user_id: authData.user.id,
