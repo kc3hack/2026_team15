@@ -15,6 +15,7 @@ type CreateContractBody = {
   dailyLimitSeconds: number
   penaltyPerDay: number
   depositTotal: number
+  paymentIntentId: string
   selectedApps: Array<{
     bundleId: string
     name: string
@@ -45,8 +46,9 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")
     const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")
+    const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY")
 
-    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey) {
+    if (!supabaseUrl || !supabaseAnonKey || !supabaseServiceRoleKey || !stripeSecretKey) {
       return new Response(
         JSON.stringify({ error: "missing_supabase_env" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -80,6 +82,7 @@ Deno.serve(async (req) => {
       dailyLimitSeconds,
       penaltyPerDay,
       depositTotal,
+      paymentIntentId,
       selectedApps,
       contractDays = 7,
       clientNowIso,
@@ -106,6 +109,12 @@ Deno.serve(async (req) => {
     if (depositTotal !== penaltyPerDay * 7) {
       return new Response(
         JSON.stringify({ error: "deposit_mismatch" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+    if (!paymentIntentId || !paymentIntentId.startsWith("pi_")) {
+      return new Response(
+        JSON.stringify({ error: "invalid_payment_intent_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
@@ -182,6 +191,44 @@ Deno.serve(async (req) => {
           },
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+
+    const paymentIntentResponse = await fetch(
+      `https://api.stripe.com/v1/payment_intents/${paymentIntentId}`,
+      {
+        method: "GET",
+        headers: {
+          "Authorization": `Bearer ${stripeSecretKey}`,
+        },
+      },
+    )
+    if (!paymentIntentResponse.ok) {
+      return new Response(
+        JSON.stringify({ error: "failed_to_verify_payment_intent" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      )
+    }
+    const paymentIntent = await paymentIntentResponse.json() as {
+      status?: string
+      amount?: number
+      currency?: string
+      metadata?: Record<string, string>
+    }
+    const metadataUserId = paymentIntent.metadata?.user_id ?? ""
+    const metadataPenaltyPerDay = Number(paymentIntent.metadata?.penalty_per_day ?? "")
+    const metadataContractDays = Number(paymentIntent.metadata?.contract_days ?? "")
+    const isPaymentValid =
+      paymentIntent.status === "succeeded" &&
+      paymentIntent.amount === depositTotal &&
+      paymentIntent.currency === "jpy" &&
+      metadataUserId === userId &&
+      metadataPenaltyPerDay === penaltyPerDay &&
+      metadataContractDays === contractDays
+    if (!isPaymentValid) {
+      return new Response(
+        JSON.stringify({ error: "payment_verification_failed" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       )
     }
 

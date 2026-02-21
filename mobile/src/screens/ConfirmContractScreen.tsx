@@ -86,8 +86,8 @@ export function ConfirmContractScreen(): React.JSX.Element {
             apikey: env.supabaseAnonKey,
           },
           body: JSON.stringify({
-            amount: pendingContractData.depositTotal,
-            currency: 'jpy',
+            penaltyPerDay: pendingContractData.penaltyPerDay,
+            contractDays: 7,
           }),
         },
       );
@@ -122,7 +122,12 @@ export function ConfirmContractScreen(): React.JSX.Element {
         return;
       }
 
-      const { clientSecret } = await paymentIntentResponse.json();
+      const { clientSecret, paymentIntentId } =
+        await paymentIntentResponse.json();
+      if (!clientSecret || !paymentIntentId) {
+        setError('決済の初期化情報が不正です');
+        return;
+      }
 
       const { error: confirmError } = await confirmPayment(clientSecret, {
         paymentMethodType: 'Card',
@@ -139,6 +144,7 @@ export function ConfirmContractScreen(): React.JSX.Element {
       const created = await createContract(
         pendingContractData.dailyLimitSeconds,
         pendingContractData.penaltyPerDay,
+        paymentIntentId,
       );
 
       if (!created) {

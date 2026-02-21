@@ -114,7 +114,7 @@ function ContractCreationHarness({ onCreated }: HarnessProps) {
 
   useEffect(() => {
     if (!profile || selectedApps.length === 0) return;
-    void createContract(5400, 500).then(onCreated);
+    void createContract(5400, 500, 'pi_test_contract').then(onCreated);
   }, [createContract, onCreated, profile, selectedApps]);
 
   return null;

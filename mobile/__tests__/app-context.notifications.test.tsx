@@ -136,7 +136,7 @@ function UsageSimulationHarness() {
     didSimulateRef.current = true;
 
     const app = selectedApps[0];
-    void createContract(3600, 500).then(() => {
+    void createContract(3600, 500, 'pi_test_notifications').then(() => {
       simulateUsage(app.bundleId, 1800);
     });
   }, [profile, selectedApps, setSelectedApps, createContract, simulateUsage]);
