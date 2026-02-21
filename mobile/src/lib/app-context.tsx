@@ -57,7 +57,6 @@ interface AppContextType {
   refreshContract: () => void;
   simulateUsage: (bundleId: string, seconds: number) => void;
   triggerViolation: () => Promise<boolean>;
-  resetDailyShield: () => void;
   advanceMockDay: () => void;
 }
 
@@ -606,11 +605,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
     syncContractFinancials,
   ]);
 
-  const resetDailyShield = useCallback(() => {
-    mockStore.resetDailyShield();
-    refreshContract();
-  }, [refreshContract]);
-
   const advanceMockDay = useCallback(() => {
     mockStore.advanceToNextDay();
     refreshContract();
@@ -640,7 +634,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
         refreshContract,
         simulateUsage,
         triggerViolation,
-        resetDailyShield,
         advanceMockDay,
       }}
     >

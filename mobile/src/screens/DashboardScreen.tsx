@@ -71,14 +71,12 @@ function ActiveDashboard({
   contract,
   simulateUsage,
   triggerViolation,
-  resetDailyShield,
   advanceMockDay,
   logout,
 }: {
   contract: Contract;
   simulateUsage: (bundleId: string, seconds: number) => void;
   triggerViolation: () => Promise<boolean>;
-  resetDailyShield: () => void;
   advanceMockDay: () => void;
   logout: () => void;
 }) {
@@ -98,7 +96,6 @@ function ActiveDashboard({
   const violationDays = mockStore.getViolationDaysCount(contract.id);
   const balance = mockStore.getContractBalance(contract.id);
   const totalPenalty = mockStore.getTotalPenalty(contract.id);
-  const isShielded = mockStore.isShieldActive();
   const mockLocalDate = mockStore.getMockLocalDate();
   const startLocalDate = toLocalDateString(new Date(contract.startAt));
   const completedDays = Math.max(
@@ -305,14 +302,6 @@ function ActiveDashboard({
                   <Text style={styles.dayAdvanceText}>次の日へ進める</Text>
                 </TouchableOpacity>
               </View>
-              {isShielded && (
-                <TouchableOpacity
-                  style={styles.resetButton}
-                  onPress={resetDailyShield}
-                >
-                  <Text style={styles.resetText}>日次リセット</Text>
-                </TouchableOpacity>
-              )}
             </View>
           )}
         </View>
@@ -407,7 +396,6 @@ export function DashboardScreen(): React.JSX.Element {
     refreshContract,
     simulateUsage,
     triggerViolation,
-    resetDailyShield,
     advanceMockDay,
     logout,
     setStep,
@@ -450,7 +438,6 @@ export function DashboardScreen(): React.JSX.Element {
         contract={contract}
         simulateUsage={simulateUsage}
         triggerViolation={triggerViolation}
-        resetDailyShield={resetDailyShield}
         advanceMockDay={advanceMockDay}
         logout={logout}
       />
@@ -727,18 +714,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   dayAdvanceText: {
-    fontSize: 13,
-    color: colors.text,
-  },
-  resetButton: {
-    backgroundColor: colors.background,
-    borderRadius: borderRadius.sm,
-    paddingVertical: spacing.sm,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  resetText: {
     fontSize: 13,
     color: colors.text,
   },

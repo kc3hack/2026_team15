@@ -427,10 +427,6 @@ class MockStore {
     this.shieldActive = this.getTodayViolation(contractId) !== null;
   }
 
-  resetDailyShield(): void {
-    this.shieldActive = false;
-  }
-
   // Check if contract has expired
   checkContractExpiry(): void {
     const contract = this.getActiveContract();
