@@ -74,6 +74,12 @@ describe('usage-warning-notifier', () => {
     });
 
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledTimes(1);
+    expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Yohakuからリマインド',
+        body: '今日の利用時間が80%です。もし100%に達してしまったら…',
+      }),
+    );
     expect(AsyncStorage.getItem).toHaveBeenNthCalledWith(
       1,
       'usage-warning:contract-1:2026-02-20:80',
@@ -93,6 +99,12 @@ describe('usage-warning-notifier', () => {
 
     expect(AsyncStorage.getItem).toHaveBeenCalledWith(
       'usage-warning:contract-1:2026-02-20:50',
+    );
+    expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Yohakuからリマインド',
+        body: '今日の利用時間が50%に到達しました。つい使いすぎていませんか？',
+      }),
     );
     expect(PushNotificationIOS.addNotificationRequest).toHaveBeenCalledTimes(1);
     expect(AsyncStorage.setItem).toHaveBeenCalledTimes(1);

@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 
 const WARNING_THRESHOLDS = [0.5, 0.8] as const;
 const STORAGE_PREFIX = 'usage-warning';
+const WARNING_TITLE = 'Yohakuからリマインド';
 
 type NotifyIfThresholdReachedParams = {
   contractId: string;
@@ -24,6 +25,13 @@ function buildDedupeKey(
 function buildNotificationId(contractId: string, threshold: number): string {
   const thresholdPercent = Math.round(threshold * 100);
   return `${contractId}-${thresholdPercent}-${Date.now()}`;
+}
+
+function buildNotificationBody(thresholdPercent: number): string {
+  if (thresholdPercent >= 80) {
+    return '今日の利用時間が80%です。もし100%に達してしまったら…';
+  }
+  return '今日の利用時間が50%に到達しました。つい使いすぎていませんか？';
 }
 
 export async function requestPermission(): Promise<boolean> {
@@ -69,8 +77,8 @@ export async function notifyIfThresholdReached({
   const thresholdPercent = Math.round(reachedThreshold * 100);
   PushNotificationIOS.addNotificationRequest({
     id: buildNotificationId(contractId, reachedThreshold),
-    title: '利用時間の上限が近づいています',
-    body: `今日の利用時間が${thresholdPercent}%に到達しました。`,
+    title: WARNING_TITLE,
+    body: buildNotificationBody(thresholdPercent),
     threadId: `usage-warning-${contractId}`,
     userInfo: {
       contractId,
