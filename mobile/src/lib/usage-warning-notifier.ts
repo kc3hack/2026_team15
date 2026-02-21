@@ -2,7 +2,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import PushNotificationIOS from '@react-native-community/push-notification-ios';
 import { Platform } from 'react-native';
 
-const WARNING_THRESHOLDS = [0.8, 0.9] as const;
+const WARNING_THRESHOLDS = [0.5, 0.8] as const;
 const STORAGE_PREFIX = 'usage-warning';
 
 type NotifyIfThresholdReachedParams = {
