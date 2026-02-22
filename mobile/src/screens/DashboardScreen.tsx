@@ -339,9 +339,6 @@ function CompletedDashboard({
 
         {/* Completion badge */}
         <View style={styles.completionCard}>
-          <View style={styles.completionIcon}>
-            <Text style={styles.completionIconText}>完</Text>
-          </View>
           <Text style={styles.completionTitle}>契約が完了しました</Text>
           <Text style={styles.completionSubtitle}>
             1週間の取り組み、お疲れさまでした。
@@ -372,9 +369,7 @@ function CompletedDashboard({
               highlight
             />
           </View>
-          <Text style={styles.resultNote}>
-            MVP: 実際の返金処理は行われません
-          </Text>
+          <Text style={styles.resultNote}>最終残高が返金されます。</Text>
         </View>
 
         {/* New contract */}
@@ -732,19 +727,6 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     alignItems: 'center',
     gap: spacing.md,
-  },
-  completionIcon: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  completionIconText: {
-    fontSize: 28,
-    fontWeight: '500',
-    color: colors.surface,
   },
   completionTitle: {
     fontSize: 18,

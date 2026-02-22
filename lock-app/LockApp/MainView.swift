@@ -2,31 +2,14 @@ import SwiftUI
 
 struct MainView: View {
     @StateObject private var lockManager = LockManager.shared
-    @State private var showSettings = false
     @Environment(\.scenePhase) private var scenePhase
 
     var body: some View {
         Group {
             if lockManager.isLocked {
                 LockScreenView()
-                    .overlay(
-                        Button(action: { showSettings = true }) {
-                            Image(systemName: "gearshape.fill")
-                                .foregroundColor(.gray.opacity(0.5))
-                                .padding()
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                        .padding(.top, 60)
-                        .padding(.leading, 20)
-                    )
-                    .sheet(isPresented: $showSettings) {
-                        SettingsView()
-                    }
             } else {
                 UnlockedView()
-                    .sheet(isPresented: $showSettings) {
-                        SettingsView()
-                    }
             }
         }
         .onAppear {
@@ -42,7 +25,6 @@ struct MainView: View {
 
 struct UnlockedView: View {
     @StateObject private var lockManager = LockManager.shared
-    @State private var showSettings = false
 
     var body: some View {
         ZStack {
@@ -74,44 +56,22 @@ struct UnlockedView: View {
                 }
                 .padding(.bottom, 8)
 
-                // App icon (smaller, below checkmark)
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.purple.opacity(0.5),
-                                    Color.pink.opacity(0.5),
-                                    Color.orange.opacity(0.5)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 48, height: 48)
-
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 20))
-                        .foregroundColor(.white)
-                }
-
-                Text("Instagram")
+                Text("SNS")
                     .font(.system(size: 18, weight: .medium))
                     .foregroundColor(.white)
 
-                // UNLOCKED text
                 Text("UNLOCKED")
                     .font(.system(size: 32, weight: .bold))
                     .foregroundColor(.green)
                     .padding(.top, 8)
 
-                Text("This app is available to use")
+                Text("現在は利用できます")
                     .font(.system(size: 16))
                     .foregroundColor(.gray)
 
                 // Time remaining
                 VStack(spacing: 8) {
-                    Text("Time Remaining Today")
+                    Text("本日の残り時間")
                         .font(.system(size: 14))
                         .foregroundColor(.gray)
 
@@ -126,23 +86,9 @@ struct UnlockedView: View {
                 .cornerRadius(12)
 
                 Spacer()
-
-                // Settings button
-                Button(action: { showSettings = true }) {
-                    HStack {
-                        Image(systemName: "gearshape.fill")
-                        Text("Settings")
-                    }
-                    .font(.system(size: 16))
-                    .foregroundColor(.blue)
-                    .padding()
-                }
             }
             .padding(.top, 60)
             .padding(.bottom, 40)
-        }
-        .sheet(isPresented: $showSettings) {
-            SettingsView()
         }
     }
 }

@@ -34,14 +34,6 @@ export function LoginScreen(): React.JSX.Element {
           <Text style={styles.subtitle}>スマホから、余白を取り戻す</Text>
         </View>
 
-        {/* Message */}
-        <View style={styles.messageBox}>
-          <Text style={styles.messageText}>
-            契約と金銭的コミットメントで{'\n'}
-            スマホ利用をコントロール
-          </Text>
-        </View>
-
         {/* Login button */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
@@ -59,7 +51,6 @@ export function LoginScreen(): React.JSX.Element {
               <Text style={styles.buttonText}>Sign in with Apple</Text>
             )}
           </TouchableOpacity>
-          <Text style={styles.disclaimer}>MVP: モックログインを使用</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -93,22 +84,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  messageBox: {
-    width: '100%',
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.md,
-    paddingVertical: spacing.xxl,
-    paddingHorizontal: spacing.xl,
-    marginBottom: 56,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.primary,
-  },
-  messageText: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
   buttonContainer: {
     width: '100%',
     alignItems: 'center',
@@ -134,10 +109,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: colors.surface,
-  },
-  disclaimer: {
-    marginTop: spacing.md,
-    fontSize: 12,
-    color: colors.textLight,
   },
 });
