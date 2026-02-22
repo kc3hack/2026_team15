@@ -6,7 +6,7 @@
 ![Yohaku key visual](yohaku.screenshot.png)
 
 ## チーム名
-- TODO: チームID・チーム名を最終版に差し替え
+- Life Forward
 
 ---
 
@@ -75,14 +75,19 @@ Yohaku は、以下の構造で継続性を作ります。
 6. 日付進行で翌日状態を確認
 
 ### デモ動画
-- TODO: 最終デモ動画URLに差し替え
+- [YouTube Shorts](https://youtube.com/shorts/Sgt2vL_yQg4?feature=share)
+
+### デモ環境のビルド手順
+- セットアップ/起動手順は `docs/build-guide.md` を参照
 
 ---
 
 ## 4. 技術面でのこだわり
 
 ### 4.1 「モックでも運用可能なロジック」を優先
-Screen Time API 本連携はMVPで未実装ですが、以下の運用ロジックは既に完成しています。
+Screen Time API 本連携はMVPで未実装ですが、Apple Developer Program（年額）/ entitlement / 審査準備の運用コストが大きく、ハッカソンではコアロジック実装を優先しました。APIdocumentを参照しながら実装したため、課金すればリリースは可能。
+
+以下の運用ロジックは既に完成しています。
 
 - 契約作成
 - 違反判定と日次記録
@@ -101,9 +106,25 @@ Screen Time API 本連携はMVPで未実装ですが、以下の運用ロジッ�
 - ただし Stripe 連携自体は実装済み
   - PaymentIntent作成
   - 契約作成時のPaymentIntent検証
+  - Supabase匿名ユーザーIDをPaymentIntent metadataに埋め込み、サーバー側で照合
   - MVPではテスト運用前提（最終精算ロジックは未適用）
+  - カード情報はStripe SDK経由で処理し、アプリ/自前サーバーでカード番号を保持しない
 
-### 4.4 Apple審査を見据えた方針
+### 4.4 バックエンド実装
+- Supabaseはクラウド本番環境を使用
+- StripeはSandbox環境を使用
+- Edge Functions (`create-payment-intent`, `create-contract`, `record-violation`) で認証付きサーバー処理を実装
+- 契約作成時に決済情報・ユーザー情報・金額整合をサーバー側で検証
+- 違反記録はRPCで冪等化し、同日多重減算を防止
+
+### 4.5 セキュリティ設計（金銭を伴う前提）
+- RLS + 認証ユーザー制約で他ユーザーのデータ参照を防止
+- `contracts` の partial unique制約で同時アクティブ契約を防止
+- `violations` の unique制約で1日1違反をDBで保証
+- `record_violation` RPCは `service_role` 経由のみ実行可能に制限
+- 匿名ログインでもユーザーIDを一貫利用し、契約・違反・決済リクエストの整合を維持
+
+### 4.6 Apple審査を見据えた方針
 金銭コミットメントの行き先は、Apple審査に配慮し、公式に認められた非営利団体への拠出を想定した運用方針で設計しています（最終運用時に法務・審査要件を精査）。
 
 ---
@@ -117,6 +138,12 @@ Screen Time API 本連携はMVPで未実装ですが、以下の運用ロジッ�
 
 見た目の派手さよりも、継続行動を支える落ち着いた体験を優先しました。
 
+### UIスクリーンショット
+![Yohaku UI 1](imgs1.png)
+![Yohaku UI 2](imgs2.png)
+![Yohaku UI 3](imgs311.39.06.png)
+![Yohaku Lock UI](locked.png)
+
 ---
 
 ## 6. 将来の展望
@@ -125,7 +152,6 @@ Screen Time API 本連携はMVPで未実装ですが、以下の運用ロジッ�
 - 実決済精算（違反分capture / 達成分cancel）
 - 非営利団体への拠出フロー本実装
 - 取り戻した時間の可視化・振り返り機能強化
-- Android/Webを含む展開検討
 
 ---
 
