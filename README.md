@@ -6,7 +6,7 @@
 ![Yohaku key visual](yohaku.screenshot.png)
 
 ## チーム名
-- TODO: チームID・チーム名を最終版に差し替え
+- Life Forward
 
 ---
 
@@ -75,7 +75,10 @@ Yohaku は、以下の構造で継続性を作ります。
 6. 日付進行で翌日状態を確認
 
 ### デモ動画
-- TODO: 最終デモ動画URLに差し替え
+- [YouTube Shorts](https://youtube.com/shorts/Sgt2vL_yQg4?feature=share)
+
+### デモ環境のビルド手順
+- セットアップ/起動手順は `docs/build-guide.md` を参照
 
 ---
 
@@ -116,6 +119,12 @@ Screen Time API 本連携はMVPで未実装ですが、以下の運用ロジッ�
 - 「今日」「今週」の区切りで、意思決定の単位を明確化
 
 見た目の派手さよりも、継続行動を支える落ち着いた体験を優先しました。
+
+### UIスクリーンショット
+![Yohaku UI 1](imgs1.png)
+![Yohaku UI 2](imgs2.png)
+![Yohaku UI 3](imgs311.39.06.png)
+![Yohaku Lock UI](locked.png)
 
 ---
 
