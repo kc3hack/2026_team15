@@ -13,7 +13,7 @@ extension View {
 
 struct LockScreenView: View {
     // アプリ名はここで変更できます
-    let appName: String = "Instagram"
+    let appName: String = "SNS"
 
     var body: some View {
         ZStack {
@@ -23,33 +23,6 @@ struct LockScreenView: View {
 
             VStack(spacing: 0) {
                 Spacer()
-
-                // アプリアイコン（薄暗い）
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(
-                            LinearGradient(
-                                colors: [
-                                    Color.purple.opacity(0.3),
-                                    Color.pink.opacity(0.3),
-                                    Color.orange.opacity(0.3)
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 72, height: 72)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16)
-                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                        )
-
-                    // カメラアイコン
-                    Image(systemName: "camera.fill")
-                        .font(.system(size: 32))
-                        .foregroundColor(.white.opacity(0.5))
-                }
-                .padding(.bottom, 16)
 
                 // 砂時計アイコンとアプリ名
                 HStack(spacing: 6) {
@@ -63,50 +36,25 @@ struct LockScreenView: View {
                 }
                 .padding(.bottom, 24)
 
-                // タイトル
-                Text("App Limit")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundColor(.white)
-                    .padding(.bottom, 12)
+                Text("LOCKED")
+                    .font(.system(size: 34, weight: .bold))
+                    .foregroundColor(.red)
+                    .padding(.bottom, 10)
 
-                // メッセージ
-                Text("You've reached your limit for \(appName).")
+                Text("\(appName) は本日の上限に達しました。")
                     .font(.system(size: 17))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
+                    .padding(.bottom, 12)
+
+                Text("少し休んで、また明日落ち着いて使いましょう。")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.white.opacity(0.88))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 36)
 
                 Spacer()
-
-                // ボタン
-                VStack(spacing: 0) {
-                    Divider()
-                        .background(Color.gray.opacity(0.3))
-
-                    Button(action: {
-                        // 何もしない（OKボタン）
-                    }) {
-                        Text("OK")
-                            .font(.system(size: 20))
-                            .foregroundColor(.blue)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                    }
-
-                    Divider()
-                        .background(Color.gray.opacity(0.3))
-
-                    Button(action: {
-                        // 何もしない（Request More Time）
-                    }) {
-                        Text("Request More Time")
-                            .font(.system(size: 20))
-                            .foregroundColor(.blue)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                    }
-                }
-                .background(Color.black)
             }
         }
         .lockAppStatusBarHidden()

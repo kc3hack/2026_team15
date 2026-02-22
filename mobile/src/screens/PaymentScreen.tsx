@@ -127,7 +127,13 @@ export function PaymentScreen(): React.JSX.Element {
 
           <View style={styles.securityNote}>
             <Text style={styles.securityNoteText}>
-              🔒 カード情報は暗号化されてStripeを通じて安全に処理されます
+              カード情報は暗号化され、Stripeを通じて安全に処理されます。
+            </Text>
+            <Text style={styles.testCardNote}>
+              テスト用: 4242 4242 4242 4242（仮発行クレカ情報）
+            </Text>
+            <Text style={styles.testCardNote}>
+              MM/YY・CVCは任意の値で入力できます。
             </Text>
           </View>
 
@@ -229,6 +235,12 @@ const styles = StyleSheet.create({
   securityNoteText: {
     fontSize: 12,
     color: colors.textMuted,
+    textAlign: 'center',
+  },
+  testCardNote: {
+    marginTop: spacing.xs,
+    fontSize: 12,
+    color: colors.textSecondary,
     textAlign: 'center',
   },
   errorContainer: {

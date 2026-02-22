@@ -63,8 +63,8 @@ export function PermissionScreen(): React.JSX.Element {
           </View>
           <Text style={styles.title}>Screen Time 許可</Text>
           <Text style={styles.description}>
-            アプリの使用時間を監視し、制限を適用するために{'\n'}
-            Screen Time APIへのアクセスが必要です。
+            アプリの使用時間を監視し、起動に制限を適用するためにScreen
+            Timeへのアクセスが必要です。
           </Text>
         </View>
 
@@ -109,12 +109,6 @@ export function PermissionScreen(): React.JSX.Element {
               <Text style={styles.buttonText}>許可する</Text>
             )}
           </TouchableOpacity>
-          <View style={styles.helperCard}>
-            <Text style={styles.helperCardText}>
-              許可後に制限対象アプリの選択画面へ進みます
-            </Text>
-          </View>
-          <Text style={styles.disclaimer}>MVP: モックで許可をシミュレート</Text>
         </View>
       </View>
     </SafeAreaView>
@@ -195,20 +189,6 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
   },
-  helperCard: {
-    width: '100%',
-    marginTop: spacing.md,
-    padding: spacing.md,
-    backgroundColor: colors.surfaceAlt,
-    borderRadius: borderRadius.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  helperCardText: {
-    fontSize: 12,
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
   button: {
     width: '100%',
     height: 52,
@@ -239,10 +219,5 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
     color: colors.surface,
-  },
-  disclaimer: {
-    marginTop: spacing.md,
-    fontSize: 12,
-    color: colors.textLight,
   },
 });

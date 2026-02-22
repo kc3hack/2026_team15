@@ -336,7 +336,8 @@ export function CreateContractScreen(): React.JSX.Element {
             />
           </View>
           <Text style={styles.contractNote}>
-            デポジットは仮預かりです。違反がなければ全額返金されます。
+            デポジットは仮預かりです。{'\n'}
+            ７日後に違反日数分、減額して返金されます。
           </Text>
         </View>
       </ScrollView>
